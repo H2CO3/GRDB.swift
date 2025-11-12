@@ -177,7 +177,7 @@ extension Table where RowDecoder == Row {
 }
 
 extension Table: DatabaseRegionConvertible {
-    public func databaseRegion(_ db: Database) throws -> DatabaseRegion {
+    public func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion {
         DatabaseRegion(table: tableName)
     }
 }
@@ -848,7 +848,7 @@ extension Table {
     /// ```
     ///
     /// - parameter db: A database connection.
-    public func fetchCount(_ db: Database) throws -> Int {
+    public func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try all().fetchCount(db)
     }
 }
@@ -885,7 +885,7 @@ extension Table where RowDecoder: FetchableRecord {
     /// - parameter db: A database connection.
     /// - returns: A ``RecordCursor`` over fetched records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> RecordCursor<RowDecoder> {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> RecordCursor<RowDecoder> {
         try all().fetchCursor(db)
     }
 
@@ -908,7 +908,7 @@ extension Table where RowDecoder: FetchableRecord {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [RowDecoder] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [RowDecoder] {
         try all().fetchAll(db)
     }
 
@@ -928,7 +928,7 @@ extension Table where RowDecoder: FetchableRecord {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> RowDecoder? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowDecoder? {
         try all().fetchOne(db)
     }
 }
@@ -950,7 +950,7 @@ extension Table where RowDecoder: FetchableRecord & Hashable {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<RowDecoder> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<RowDecoder> {
         try all().fetchSet(db)
     }
 }
@@ -987,7 +987,7 @@ extension Table where RowDecoder == Row {
     /// - parameter db: A database connection.
     /// - returns: A ``RowCursor`` over fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> RowCursor {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowCursor {
         try all().fetchCursor(db)
     }
 
@@ -1009,7 +1009,7 @@ extension Table where RowDecoder == Row {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [Row] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [Row] {
         try all().fetchAll(db)
     }
 
@@ -1028,7 +1028,7 @@ extension Table where RowDecoder == Row {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> Row? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> Row? {
         try all().fetchOne(db)
     }
 
@@ -1047,7 +1047,7 @@ extension Table where RowDecoder == Row {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<Row> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<Row> {
         try all().fetchSet(db)
     }
 }
@@ -1071,7 +1071,7 @@ extension Table where RowDecoder: DatabaseValueConvertible {
     /// - parameter db: A database connection.
     /// - returns: A ``DatabaseValueCursor`` over fetched values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> DatabaseValueCursor<RowDecoder> {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseValueCursor<RowDecoder> {
         try all().fetchCursor(db)
     }
 
@@ -1082,7 +1082,7 @@ extension Table where RowDecoder: DatabaseValueConvertible {
     /// - parameter db: A database connection.
     /// - returns: An array of values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [RowDecoder] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [RowDecoder] {
         try all().fetchAll(db)
     }
 
@@ -1096,7 +1096,7 @@ extension Table where RowDecoder: DatabaseValueConvertible {
     /// - parameter db: A database connection.
     /// - returns: An optional value.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> RowDecoder? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowDecoder? {
         try all().fetchOne(db)
     }
 }
@@ -1109,7 +1109,7 @@ extension Table where RowDecoder: DatabaseValueConvertible & Hashable {
     /// - parameter db: A database connection.
     /// - returns: A set of values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<RowDecoder> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<RowDecoder> {
         try all().fetchSet(db)
     }
 }
@@ -1133,7 +1133,7 @@ extension Table where RowDecoder: DatabaseValueConvertible & StatementColumnConv
     /// - parameter db: A database connection.
     /// - returns: A ``FastDatabaseValueCursor`` over fetched values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> FastDatabaseValueCursor<RowDecoder> {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> FastDatabaseValueCursor<RowDecoder> {
         try all().fetchCursor(db)
     }
 
@@ -1144,7 +1144,7 @@ extension Table where RowDecoder: DatabaseValueConvertible & StatementColumnConv
     /// - parameter db: A database connection.
     /// - returns: An array of values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [RowDecoder] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [RowDecoder] {
         try all().fetchAll(db)
     }
 
@@ -1158,7 +1158,7 @@ extension Table where RowDecoder: DatabaseValueConvertible & StatementColumnConv
     /// - parameter db: A database connection.
     /// - returns: An optional value.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> RowDecoder? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowDecoder? {
         try all().fetchOne(db)
     }
 }
@@ -1171,7 +1171,7 @@ extension Table where RowDecoder: DatabaseValueConvertible & StatementColumnConv
     /// - parameter db: A database connection.
     /// - returns: A set of values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<RowDecoder> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<RowDecoder> {
         try all().fetchSet(db)
     }
 }
@@ -1568,7 +1568,7 @@ extension Table {
     /// - returns: The number of deleted rows
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
-    public func deleteAll(_ db: Database) throws -> Int {
+    public func deleteAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try all().deleteAll(db)
     }
 }
@@ -1594,7 +1594,7 @@ extension Table {
     ///     - db: A database connection.
     ///     - key: A primary key value.
     /// - returns: Whether a row exists for this primary key.
-    public func exists(_ db: Database, key: some DatabaseValueConvertible) throws -> Bool {
+    public func exists(_ db: DatabaseBase<some SQLiteAPI>, key: some DatabaseValueConvertible) throws -> Bool {
         try !filter(key: key).isEmpty(db)
     }
 }
@@ -1628,7 +1628,7 @@ where RowDecoder: Identifiable,
     ///     - db: A database connection.
     ///     - id: A primary key value.
     /// - returns: Whether a row exists for this primary key.
-    public func exists(_ db: Database, id: RowDecoder.ID) throws -> Bool {
+    public func exists(_ db: DatabaseBase<some SQLiteAPI>, id: RowDecoder.ID) throws -> Bool {
         if id.databaseValue.isNull {
             // Don't hit the database
             return false
@@ -1665,7 +1665,7 @@ extension Table {
     ///     - db: A database connection.
     ///     - key: A key dictionary.
     /// - returns: Whether a row exists for this key.
-    public func exists(_ db: Database, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
+    public func exists(_ db: DatabaseBase<some SQLiteAPI>, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
         try !filter(key: key).isEmpty(db)
     }
 }
@@ -1697,7 +1697,7 @@ extension Table {
     /// - returns: The number of deleted rows.
     @discardableResult
     public func deleteAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         keys: some Collection<some DatabaseValueConvertible>
     ) throws -> Int {
         if keys.isEmpty {
@@ -1730,7 +1730,7 @@ extension Table {
     ///     - key: A primary key value.
     /// - returns: Whether a row was deleted.
     @discardableResult
-    public func deleteOne(_ db: Database, key: some DatabaseValueConvertible) throws -> Bool {
+    public func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, key: some DatabaseValueConvertible) throws -> Bool {
         if key.databaseValue.isNull {
             // Don't hit the database
             return false
@@ -1774,7 +1774,7 @@ where RowDecoder: Identifiable,
     /// - returns: The number of deleted rows.
     @discardableResult
     public func deleteAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         ids: some Collection<RowDecoder.ID>
     ) throws -> Int {
         if ids.isEmpty {
@@ -1814,7 +1814,7 @@ where RowDecoder: Identifiable,
     ///     - id: A primary key value.
     /// - returns: Whether a row was deleted.
     @discardableResult
-    public func deleteOne(_ db: Database, id: RowDecoder.ID) throws -> Bool {
+    public func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, id: RowDecoder.ID) throws -> Bool {
         if id.databaseValue.isNull {
             // Don't hit the database
             return false
@@ -1857,7 +1857,7 @@ extension Table {
     ///     - keys: An array of key dictionaries.
     /// - returns: The number of deleted rows.
     @discardableResult
-    public func deleteAll(_ db: Database, keys: [[String: (any DatabaseValueConvertible)?]]) throws -> Int {
+    public func deleteAll(_ db: DatabaseBase<some SQLiteAPI>, keys: [[String: (any DatabaseValueConvertible)?]]) throws -> Int {
         if keys.isEmpty {
             // Avoid hitting the database
             return 0
@@ -1896,7 +1896,7 @@ extension Table {
     ///     - key: A key dictionary.
     /// - returns: Whether a row was deleted.
     @discardableResult
-    public func deleteOne(_ db: Database, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
+    public func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
         try deleteAll(db, keys: [key]) > 0
     }
 }
@@ -1930,8 +1930,8 @@ extension Table {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignment: (DatabaseComponents) throws -> ColumnAssignment
     ) throws -> Int
     where RowDecoder: TableRecord
@@ -1966,8 +1966,8 @@ extension Table {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> Int
     where RowDecoder: TableRecord
@@ -1995,8 +1995,8 @@ extension Table {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> Int
     {
@@ -2023,8 +2023,8 @@ extension Table {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: ColumnAssignment...)
     throws -> Int
     {

@@ -1,7 +1,7 @@
 #if GRDBCUSTOMSQLITE || SQLITE_HAS_CODEC
 // MARK: - JSON
 
-extension Database {
+extension DatabaseBase {
     /// Validates and minifies a JSON string, with the `JSON` SQL function.
     ///
     /// For example:
@@ -453,7 +453,7 @@ extension Database {
 
 // MARK: - JSONB
 
-extension Database {
+extension DatabaseBase {
     public struct JSONValidationOptions: OptionSet, Sendable {
         public let rawValue: Int
         
@@ -791,7 +791,7 @@ extension Database {
 #else
 // MARK: - JSON
 
-extension Database {
+extension DatabaseBase {
     /// Validates and minifies a JSON string, with the `JSON` SQL function.
     ///
     /// For example:

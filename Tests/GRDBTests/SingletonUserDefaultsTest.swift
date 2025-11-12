@@ -28,7 +28,7 @@ extension AppConfiguration {
 // Database Access
 extension AppConfiguration: FetchableRecord, PersistableRecord {
     // Customize the default PersistableRecord behavior
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         // Insert the default configuration if it does not exist yet.
         if try !exists(db) {
             try AppConfiguration.default.insert(db)
@@ -37,13 +37,13 @@ extension AppConfiguration: FetchableRecord, PersistableRecord {
     
     /// Returns the persisted configuration, or the default one if the
     /// database table is empty.
-    static func find(_ db: Database) throws -> AppConfiguration {
+    static func find(_ db: DatabaseBase<some SQLiteAPI>) throws -> AppConfiguration {
         try fetchOne(db) ?? .default
     }
 }
 
 class SingletonUserDefaultsTest: GRDBTestCase {
-    private func createEmptyAppConfigurationTable(_ db: Database) throws {
+    private func createEmptyAppConfigurationTable(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Table creation
         try db.create(table: "appConfiguration") { t in
             // Single row guarantee

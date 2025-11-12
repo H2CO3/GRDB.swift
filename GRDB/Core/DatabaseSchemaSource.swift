@@ -81,7 +81,7 @@ public protocol DatabaseSchemaSource: Sendable {
     /// // A schema source that specifies that all views are identified by
     /// // their "id" column:
     /// struct MySchemaSource: DatabaseSchemaSource {
-    ///     func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) {
+    ///     func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) {
     ///         ["id"]
     ///     }
     /// }
@@ -123,7 +123,7 @@ public protocol DatabaseSchemaSource: Sendable {
     /// // A well-behaved schema source defined by a library is public
     /// // and returns nil for unknown views.
     /// public struct MyLibrarySchemaSource: DatabaseSchemaSource {
-    ///     public func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) {
+    ///     public func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) {
     ///         if view.name == "playerView" {
     ///             // This is a view managed by my library:
     ///             return ["id"]
@@ -161,14 +161,14 @@ public protocol DatabaseSchemaSource: Sendable {
     ///     - db: A database connection.
     ///     - view: The identifier of a database view.
     func columnsForPrimaryKey(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         inView view: DatabaseObjectID
     ) throws -> [String]?
 }
 
 extension DatabaseSchemaSource {
     public func columnsForPrimaryKey(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         inView view: DatabaseObjectID
     ) throws -> [String]? {
         nil
@@ -210,7 +210,7 @@ where Source1: DatabaseSchemaSource,
     var first: Source1
     var second: Source2
     
-    func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+    func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
         if let result = try first.columnsForPrimaryKey(db, inView: view) { return result }
         if let result = try second.columnsForPrimaryKey(db, inView: view) { return result }
         return nil

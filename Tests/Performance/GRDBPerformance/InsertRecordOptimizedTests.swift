@@ -16,7 +16,7 @@ private struct Item: Codable, FetchableRecord, PersistableRecord {
     var i8: Int
     var i9: Int
     
-    static func optimizedInsertStatement(_ db: Database) throws -> Statement {
+    static func optimizedInsertStatement(_ db: DatabaseBase<some SQLiteAPI>) throws -> Statement {
         try db.makeStatement(literal: """
             INSERT INTO \(self) (
               \(CodingKeys.i0),

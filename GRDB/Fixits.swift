@@ -14,7 +14,7 @@ public class DatabaseFuture<Value> { }
 
 extension DatabasePool {
     @available(*, unavailable, message: "concurrentRead has been removed. Use `asyncConcurrentRead` instead.")
-    public func concurrentRead<T>(_ value: @escaping (Database) throws -> T) -> DatabaseFuture<T> { preconditionFailure() }
+    public func concurrentRead<T>(_ value: @escaping (DatabaseBase<some SQLiteAPI>) throws -> T) -> DatabaseFuture<T> { preconditionFailure() }
 }
 
 // swiftlint:enable all

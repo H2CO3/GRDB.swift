@@ -19,7 +19,7 @@ private struct ParentInfo: FetchableRecord, Decodable, Equatable {
 }
 
 class ValueObservationQueryInterfaceRequestTests: GRDBTestCase {
-    private func setup(_ db: Database) throws {
+    private func setup(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.create(table: "parent") { t in
             t.autoIncrementedPrimaryKey("id")
             t.column("name", .text)
@@ -31,7 +31,7 @@ class ValueObservationQueryInterfaceRequestTests: GRDBTestCase {
         }
     }
     
-    private func performDatabaseModifications(_ db: Database) throws {
+    private func performDatabaseModifications(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.inTransaction {
             try db.execute(sql: """
                 INSERT INTO parent (id, name) VALUES (1, 'foo');

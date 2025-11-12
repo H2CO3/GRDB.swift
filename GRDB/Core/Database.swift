@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
@@ -142,7 +142,7 @@ let SQLITE_TRANSIENT = unsafeBitCast(OpaquePointer(bitPattern: -1), to: sqlite3_
 /// - ``StorageClass``
 /// - ``TraceEvent``
 /// - ``TracingOptions``
-public final class Database: CustomStringConvertible, CustomDebugStringConvertible {
+public final class DatabaseBase<API: SQLiteAPI>: CustomStringConvertible, CustomDebugStringConvertible {
     // The Database class is not thread-safe. An instance should always be
     // used through a SerializedDatabase.
     
@@ -315,7 +315,7 @@ public final class Database: CustomStringConvertible, CustomDebugStringConvertib
     ///
     /// It is nil in read-only connections, because we do not report read-only
     /// transactions to transaction observers.
-    private(set) var observationBroker: DatabaseObservationBroker?
+    private(set) var observationBroker: DatabaseObservationBroker<API>?
     
     /// The list of compile options used when building SQLite
     static func sqliteCompileOptions() throws -> Set<String> {
@@ -1491,7 +1491,7 @@ public final class Database: CustomStringConvertible, CustomDebugStringConvertib
     ///       either ``TransactionCompletion/commit`` or ``TransactionCompletion/rollback``.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs, or the
     ///   error thrown by `operations`.
-    public func inTransaction(_ kind: TransactionKind? = nil, _ operations: () throws -> TransactionCompletion) throws {
+    public func inTransaction(_ kind: DatabaseTransactionKind? = nil, _ operations: () throws -> DatabaseTransactionCompletion) throws {
         // Begin transaction
         try beginTransaction(kind)
         
@@ -1703,7 +1703,7 @@ public final class Database: CustomStringConvertible, CustomDebugStringConvertib
     ///       If nil, the transaction kind is DEFERRED when the current
     ///       database access is read-only, and IMMEDIATE otherwise.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func beginTransaction(_ kind: TransactionKind? = nil) throws {
+    public func beginTransaction(_ kind: DatabaseTransactionKind? = nil) throws {
         // SQLite throws an error for non-deferred transactions when read-only.
         // We prefer immediate transactions for writes, so that write
         // transactions can not overlap. This reduces the opportunity for
@@ -1945,10 +1945,10 @@ public final class Database: CustomStringConvertible, CustomDebugStringConvertib
 // Explicit non-conformance to Sendable: `Database` must be used from a
 // serialized database access dispatch queue (see `SerializedDatabase`).
 @available(*, unavailable)
-extension Database: Sendable { }
+extension DatabaseBase: Sendable { }
 
 #if SQLITE_HAS_CODEC
-extension Database {
+extension DatabaseBase {
     
     // MARK: - Encryption
     
@@ -2021,7 +2021,7 @@ extension Database {
 }
 #endif
 
-extension Database {
+extension DatabaseBase {
     /// Returns the count of changes executed by one statement execution.
     func countChanges<T>(_ count: inout Int, forTable tableName: String, updates: () throws -> T) throws -> T {
         // Database.changesCount calls sqlite3_changes(), whose documentation says:
@@ -2049,7 +2049,7 @@ extension Database {
     }
 }
 
-extension Database {
+extension DatabaseBase {
     
     // MARK: - Database-Related Types
     
@@ -2205,26 +2205,6 @@ extension Database {
         
         /// The `ANY` column type.
         public static let any = ColumnType(rawValue: "ANY")
-    }
-    
-    /// An SQLite conflict resolution.
-    ///
-    /// Related SQLite documentation: <https://www.sqlite.org/lang_conflict.html>
-    public enum ConflictResolution: String, Sendable {
-        /// The `ROLLBACK` conflict resolution.
-        case rollback = "ROLLBACK"
-        
-        /// The `ABORT` conflict resolution.
-        case abort = "ABORT"
-        
-        /// The `FAIL` conflict resolution.
-        case fail = "FAIL"
-        
-        /// The `IGNORE` conflict resolution.
-        case ignore = "IGNORE"
-        
-        /// The `REPLACE` conflict resolution.
-        case replace = "REPLACE"
     }
     
     /// A foreign key action.
@@ -2413,29 +2393,6 @@ extension Database {
         }
     }
     
-    /// A transaction commit, or rollback.
-    ///
-    /// Related SQLite documentation: <https://www.sqlite.org/lang_transaction.html>.
-    @frozen
-    public enum TransactionCompletion: Sendable {
-        case commit
-        case rollback
-    }
-    
-    /// A transaction kind.
-    ///
-    /// Related SQLite documentation: <https://www.sqlite.org/lang_transaction.html>.
-    public enum TransactionKind: String, Sendable {
-        /// The `DEFERRED` transaction kind.
-        case deferred = "DEFERRED"
-        
-        /// The `IMMEDIATE` transaction kind.
-        case immediate = "IMMEDIATE"
-        
-        /// The `EXCLUSIVE` transaction kind.
-        case exclusive = "EXCLUSIVE"
-    }
-    
     /// An SQLite threading mode. See <https://www.sqlite.org/threadsafe.html>.
     ///
     /// - Note: Only the multi-thread mode (`SQLITE_OPEN_NOMUTEX`) is currently
@@ -2457,6 +2414,79 @@ extension Database {
             }
         }
     }
+}
+
+#warning("TODO: export as DatabaseConflictResolution")
+/// An SQLite conflict resolution.
+///
+/// Related SQLite documentation: <https://www.sqlite.org/lang_conflict.html>
+public enum DatabaseConflictResolution: String, Sendable {
+    /// The `ROLLBACK` conflict resolution.
+    case rollback = "ROLLBACK"
+    
+    /// The `ABORT` conflict resolution.
+    case abort = "ABORT"
+    
+    /// The `FAIL` conflict resolution.
+    case fail = "FAIL"
+    
+    /// The `IGNORE` conflict resolution.
+    case ignore = "IGNORE"
+    
+    /// The `REPLACE` conflict resolution.
+    case replace = "REPLACE"
+}
+
+#warning("TODO: export as Database.StorageClass")
+/// An SQLite storage class.
+///
+/// For more information, see
+/// [Datatypes In SQLite](https://www.sqlite.org/datatype3.html).
+public struct DatabaseStorageClass: RawRepresentable, Hashable, Sendable {
+    /// The SQL for the storage class (`"INTEGER"`, `"REAL"`, etc.)
+    public let rawValue: String
+    
+    /// Creates an SQL storage class.
+    public init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+    
+    /// The `INTEGER` storage class.
+    public static let integer = StorageClass(rawValue: "INTEGER")
+    
+    /// The `REAL` storage class.
+    public static let real = StorageClass(rawValue: "REAL")
+    
+    /// The `TEXT` storage class.
+    public static let text = StorageClass(rawValue: "TEXT")
+    
+    /// The `BLOB` storage class.
+    public static let blob = StorageClass(rawValue: "BLOB")
+}
+
+#warning("TODO: export as Database.TransactionCompletion")
+/// A transaction commit, or rollback.
+///
+/// Related SQLite documentation: <https://www.sqlite.org/lang_transaction.html>.
+@frozen
+public enum DatabaseTransactionCompletion: Sendable {
+    case commit
+    case rollback
+}
+
+#warning("TODO: export as Database.TransactionKind")
+/// A transaction kind.
+///
+/// Related SQLite documentation: <https://www.sqlite.org/lang_transaction.html>.
+public enum DatabaseTransactionKind: String, Sendable {
+    /// The `DEFERRED` transaction kind.
+    case deferred = "DEFERRED"
+    
+    /// The `IMMEDIATE` transaction kind.
+    case immediate = "IMMEDIATE"
+    
+    /// The `EXCLUSIVE` transaction kind.
+    case exclusive = "EXCLUSIVE"
 }
 
 // Explicit non-conformance to Sendable: a trace event contains transient

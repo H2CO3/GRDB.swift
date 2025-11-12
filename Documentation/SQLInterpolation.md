@@ -204,7 +204,7 @@ Let's extend Player with database methods.
     ```swift
     extension Player {
         /// Deletes all player with no score
-        static func deleteAllWithoutScore(_ db: Database) throws {
+        static func deleteAllWithoutScore(_ db: DatabaseBase<some SQLiteAPI>) throws {
             try db.execute(literal: "DELETE FROM \(self) WHERE \(CodingKeys.score) IS NULL")
         }
     }

@@ -26,6 +26,8 @@ where Reducer: ValueReducer,
     //
     // Configuration is not mutable.
     
+    typealias API = Reducer.API
+    
     /// How to schedule observed values and errors.
     private let scheduler: Scheduler
     
@@ -77,23 +79,23 @@ where Reducer: ValueReducer,
     /// Ability to access the database
     private struct DatabaseAccess {
         /// The observed DatabasePool.
-        let dbPool: DatabasePool
+        let dbPool: DatabasePoolBase<API>
         
         /// The fetcher that fetches database values.
         private let fetcher: Reducer.Fetcher
         
-        init(dbPool: DatabasePool, fetcher: Reducer.Fetcher) {
+        init(dbPool: DatabasePoolBase<API>, fetcher: Reducer.Fetcher) {
             self.dbPool = dbPool
             self.fetcher = fetcher
         }
         
-        func fetch(_ db: Database) throws -> Reducer.Fetcher.Value {
+        func fetch(_ db: DatabaseBase<API>) throws -> Reducer.Fetcher.Value {
             try db.isolated(readOnly: true) {
                 try fetcher.fetch(db)
             }
         }
         
-        func fetchRecordingObservedRegion(_ db: Database) throws -> (Reducer.Fetcher.Value, DatabaseRegion) {
+        func fetchRecordingObservedRegion(_ db: DatabaseBase<API>) throws -> (Reducer.Fetcher.Value, DatabaseRegion) {
             var region = DatabaseRegion()
             let fetchedValue = try db.isolated(readOnly: true) {
                 try db.recordingSelection(&region) {
@@ -159,7 +161,7 @@ where Reducer: ValueReducer,
     private var reducer: Reducer
     
     init(
-        dbPool: DatabasePool,
+        dbPool: DatabasePoolBase<API>,
         scheduler: Scheduler,
         trackingMode: ValueObservationTrackingMode,
         reducer: Reducer,
@@ -269,7 +271,7 @@ extension ValueConcurrentObserver {
         return AnyDatabaseCancellable(self)
     }
     
-    private func startObservation(_ writerDB: Database, observedRegion: DatabaseRegion) {
+    private func startObservation(_ writerDB: DatabaseBase<API>, observedRegion: DatabaseRegion) {
         observationState.region = observedRegion
         assert(observationState.isModified == false)
         writerDB.add(transactionObserver: self, extent: .observerLifetime)
@@ -290,7 +292,7 @@ extension ValueConcurrentObserver {
         // We perform the initial read from a long-lived WAL snapshot
         // transaction, because it is a handy way to keep a read transaction
         // open until we grab a write access, and compare the database versions.
-        let initialFetchTransaction: WALSnapshotTransaction
+        let initialFetchTransaction: WALSnapshotTransactionBase<API>
         do {
             initialFetchTransaction = try databaseAccess.dbPool.walSnapshotTransaction()
         } catch DatabaseError.SQLITE_ERROR {
@@ -422,7 +424,7 @@ extension ValueConcurrentObserver {
     
     private func asyncStartObservation(
         from databaseAccess: DatabaseAccess,
-        initialFetchTransaction: WALSnapshotTransaction,
+        initialFetchTransaction: WALSnapshotTransactionBase<API>,
         initialRegion: DatabaseRegion)
     {
         // We'll start the observation when we can access the writer
@@ -710,7 +712,7 @@ extension ValueConcurrentObserver {
 
 // MARK: - Observing Database Transactions
 
-extension ValueConcurrentObserver: TransactionObserver {
+extension ValueConcurrentObserver: TransactionObserverBase {
     func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool {
         if let region = observationState.region {
             return region.isModified(byEventsOfKind: eventKind)
@@ -735,7 +737,7 @@ extension ValueConcurrentObserver: TransactionObserver {
         }
     }
     
-    func databaseDidCommit(_ writerDB: Database) {
+    func databaseDidCommit(_ writerDB: DatabaseBase<API>) {
         // Ignore transaction unless database was modified
         guard observationState.isModified else { return }
         
@@ -863,7 +865,7 @@ extension ValueConcurrentObserver: TransactionObserver {
         }
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<API>) {
         // Reset the isModified flag until next transaction
         observationState.isModified = false
     }
@@ -874,7 +876,7 @@ extension ValueConcurrentObserver: TransactionObserver {
 extension ValueConcurrentObserver: DatabaseCancellable {
     func cancel() {
         // Notify cancellation
-        let (events, dbPool): (ValueObservationEvents?, DatabasePool?) = lock.synchronized {
+        let (events, dbPool): (ValueObservationEvents?, DatabasePoolBase<API>?) = lock.synchronized {
             let events = notificationCallbacks?.events
             // Set callbacks to nil so that we can't notify anything after
             // the cancellation.
@@ -906,7 +908,7 @@ extension ValueConcurrentObserver: DatabaseCancellable {
         }
     }
     
-    private func stopDatabaseObservation(_ writerDB: Database) {
+    private func stopDatabaseObservation(_ writerDB: DatabaseBase<API>) {
         writerDB.remove(transactionObserver: self)
         observationState = .notObserving
         lock.synchronized {

@@ -21,7 +21,7 @@ struct SQLForeignKeyRequest {
     }
     
     /// The (origin, destination) column pairs that join a left table to a right table.
-    func fetchForeignKeyMapping(_ db: Database) throws -> ForeignKeyMapping {
+    func fetchForeignKeyMapping(_ db: DatabaseBase<some SQLiteAPI>) throws -> ForeignKeyMapping {
         if let originColumns, let destinationColumns {
             // Total information: no need to query the database schema.
             GRDBPrecondition(originColumns.count == destinationColumns.count, "Number of columns don't match")
@@ -122,7 +122,7 @@ struct SQLForeignKeyRequest {
         var isView: Bool
     }
     
-    private func tableType(_ db: Database, for name: String) throws -> TableType? {
+    private func tableType(_ db: DatabaseBase<some SQLiteAPI>, for name: String) throws -> TableType? {
         for schemaID in try db.fetchSchemaIdentifiers() {
             if try db.schema(schemaID).containsObjectNamed(name, ofType: .table) {
                 return TableType(isView: false)

@@ -45,7 +45,7 @@ private struct Captain: Codable,
 }
 
 private struct SchemaSource: DatabaseSchemaSource {
-    func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+    func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
         if view.name == "captain" {
             return ["id"]
         } else {

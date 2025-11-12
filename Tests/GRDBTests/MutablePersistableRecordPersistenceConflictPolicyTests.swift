@@ -185,12 +185,12 @@ class MutablePersistableRecordPersistenceConflictPolicyTests: GRDBTestCase {
                 transactionEvents.append(event.copy())
             }
             
-            func databaseDidCommit(_ db: Database) {
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
                 events = transactionEvents
                 transactionEvents = []
             }
             
-            func databaseDidRollback(_ db: Database) {
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
                 events = []
                 transactionEvents = []
             }

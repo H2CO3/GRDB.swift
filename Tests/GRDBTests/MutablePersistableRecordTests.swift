@@ -15,7 +15,7 @@ private struct MutablePersistableRecordPerson : MutablePersistableRecord {
         container["aGe"] = age
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         let inserted = try insert()
         XCTAssertNotNil(inserted.rowID)
         XCTAssertEqual(inserted.rowIDColumn, "id")
@@ -84,13 +84,13 @@ private struct MutablePersistableRecordCustomizedCountry : MutablePersistableRec
         container["name"] = name
     }
     
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willInsertCount += 1
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -104,13 +104,13 @@ private struct MutablePersistableRecordCustomizedCountry : MutablePersistableRec
         rowID = inserted.rowID
     }
     
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willUpdateCount += 1
     }
     
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -123,13 +123,13 @@ private struct MutablePersistableRecordCustomizedCountry : MutablePersistableRec
         callbacks.didUpdateCount += 1
     }
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willSaveCount += 1
     }
     
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -142,13 +142,13 @@ private struct MutablePersistableRecordCustomizedCountry : MutablePersistableRec
         callbacks.didSaveCount += 1
     }
     
-    func willDelete(_ db: Database) throws {
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willDeleteCount += 1
     }
     
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -174,11 +174,11 @@ private struct PartialPlayer: Codable, MutablePersistableRecord, FetchableRecord
     
     typealias Columns = FullPlayer.Columns
     
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willInsertCount += 1
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         callbacks.aroundInsertEnterCount += 1
         _ = try insert()
         callbacks.aroundInsertExitCount += 1
@@ -189,11 +189,11 @@ private struct PartialPlayer: Codable, MutablePersistableRecord, FetchableRecord
         callbacks.didInsertCount += 1
     }
     
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         callbacks.willUpdateCount += 1
     }
     
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         callbacks.aroundUpdateEnterCount += 1
         _ = try update()
         callbacks.aroundUpdateExitCount += 1
@@ -203,11 +203,11 @@ private struct PartialPlayer: Codable, MutablePersistableRecord, FetchableRecord
         callbacks.didUpdateCount += 1
     }
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willSaveCount += 1
     }
     
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         callbacks.aroundSaveEnterCount += 1
         _ = try save()
         callbacks.aroundSaveExitCount += 1
@@ -217,11 +217,11 @@ private struct PartialPlayer: Codable, MutablePersistableRecord, FetchableRecord
         callbacks.didSaveCount += 1
     }
     
-    func willDelete(_ db: Database) throws {
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willDeleteCount += 1
     }
     
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         callbacks.aroundDeleteEnterCount += 1
         _ = try delete()
         callbacks.aroundDeleteExitCount += 1
@@ -250,11 +250,11 @@ private struct FullPlayer: Codable, MutablePersistableRecord, FetchableRecord {
     
     let callbacks = Callbacks()
     
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willInsertCount += 1
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         callbacks.aroundInsertEnterCount += 1
         _ = try insert()
         callbacks.aroundInsertExitCount += 1
@@ -265,11 +265,11 @@ private struct FullPlayer: Codable, MutablePersistableRecord, FetchableRecord {
         callbacks.didInsertCount += 1
     }
     
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         callbacks.willUpdateCount += 1
     }
     
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         callbacks.aroundUpdateEnterCount += 1
         _ = try update()
         callbacks.aroundUpdateExitCount += 1
@@ -279,11 +279,11 @@ private struct FullPlayer: Codable, MutablePersistableRecord, FetchableRecord {
         callbacks.didUpdateCount += 1
     }
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willSaveCount += 1
     }
     
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         callbacks.aroundSaveEnterCount += 1
         _ = try save()
         callbacks.aroundSaveExitCount += 1
@@ -293,11 +293,11 @@ private struct FullPlayer: Codable, MutablePersistableRecord, FetchableRecord {
         callbacks.didSaveCount += 1
     }
     
-    func willDelete(_ db: Database) throws {
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willDeleteCount += 1
     }
     
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         callbacks.aroundDeleteEnterCount += 1
         _ = try delete()
         callbacks.aroundDeleteExitCount += 1
@@ -2653,7 +2653,7 @@ extension MutablePersistableRecordTests {
     func test_aroundSave_misuse_by_not_calling_the_action() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+            func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
                 // It is a programmer error to not call the `save` argument
             }
         }
@@ -2669,7 +2669,7 @@ extension MutablePersistableRecordTests {
     func test_aroundSave_misuse_by_not_rethrowing_the_action_error() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+            func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
                 // It is a programmer error to not rethrow the error of the `save` argument
                 _ = try? save()
             }
@@ -2687,7 +2687,7 @@ extension MutablePersistableRecordTests {
     func test_aroundUpdate_misuse_by_not_calling_the_action() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+            func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
                 // It is a programmer error to not call the `update` argument
             }
         }
@@ -2703,7 +2703,7 @@ extension MutablePersistableRecordTests {
     func test_aroundUpdate_misuse_by_not_rethrowing_the_action_error() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+            func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
                 // It is a programmer error to not rethrow the error of the `update` argument
                 _ = try? update()
             }
@@ -2721,7 +2721,7 @@ extension MutablePersistableRecordTests {
     func test_aroundInsert_misuse_by_not_calling_the_action() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+            func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
                 // It is a programmer error to not call the `insert` argument
             }
         }
@@ -2738,7 +2738,7 @@ extension MutablePersistableRecordTests {
     func test_aroundInsert_misuse_by_not_rethrowing_the_action_error() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+            func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
                 // It is a programmer error to not rethrow the error of the `insert` argument
                 _ = try? insert()
             }
@@ -2760,7 +2760,7 @@ extension MutablePersistableRecordTests {
     func test_aroundDelete_misuse_by_not_calling_the_action() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+            func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
                 // It is a programmer error to not call the `delete` argument
             }
         }
@@ -2776,7 +2776,7 @@ extension MutablePersistableRecordTests {
     func test_aroundDelete_misuse_by_not_rethrowing_the_action_error() throws {
         struct BadRecord: MutablePersistableRecord, Encodable {
             let id = 1
-            func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+            func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
                 // It is a programmer error to not rethrow the error of the `delete` argument
                 _ = try? delete()
             }

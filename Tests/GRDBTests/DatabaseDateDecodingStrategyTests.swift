@@ -65,7 +65,7 @@ private struct RecordWithOptionalDate<Strategy: StrategyProvider>: FetchableReco
 class DatabaseDateDecodingStrategyTests: GRDBTestCase {
     /// test the conversion from a database value to a date extracted from a record
     private func test<T: FetchableRecord>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         record: T.Type,
         date: (T) -> Date?,
         databaseValue: (any DatabaseValueConvertible)?,
@@ -86,7 +86,7 @@ class DatabaseDateDecodingStrategyTests: GRDBTestCase {
     
     /// test the conversion from a database value to a date with a given strategy
     private func test<Strategy: StrategyProvider>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         strategy: Strategy.Type,
         databaseValue: some DatabaseValueConvertible,
         _ test: (Date) -> Void)
@@ -96,7 +96,7 @@ class DatabaseDateDecodingStrategyTests: GRDBTestCase {
         try self.test(db, record: RecordWithOptionalDate<Strategy>.self, date: { $0.date }, databaseValue: databaseValue, with: { test($0!) })
     }
     
-    private func testNullDecoding<Strategy: StrategyProvider>(_ db: Database, strategy: Strategy.Type) throws {
+    private func testNullDecoding<Strategy: StrategyProvider>(_ db: DatabaseBase<some SQLiteAPI>, strategy: Strategy.Type) throws {
         try self.test(db, record: RecordWithOptionalDate<Strategy>.self, date: { $0.date }, databaseValue: nil) { date in
             XCTAssertNil(date)
         }

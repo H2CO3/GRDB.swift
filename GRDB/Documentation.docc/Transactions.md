@@ -160,7 +160,7 @@ This restriction can be left with the ``Configuration/allowsUnsafeTransactions``
 It is possible to ask if a transaction is currently opened:
 
 ```swift
-func myCriticalMethod(_ db: Database) throws {
+func myCriticalMethod(_ db: DatabaseBase<some SQLiteAPI>) throws {
     precondition(db.isInsideTransaction, "This method requires a transaction")
     try ...
 }
@@ -169,7 +169,7 @@ func myCriticalMethod(_ db: Database) throws {
 Yet, there is a better option than checking for transactions. Critical database sections should use savepoints, described below:
 
 ```swift
-func myCriticalMethod(_ db: Database) throws {
+func myCriticalMethod(_ db: DatabaseBase<some SQLiteAPI>) throws {
     try db.inSavepoint {
         // Here the database is guaranteed to be inside a transaction.
         try ...

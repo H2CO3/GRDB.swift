@@ -1,7 +1,7 @@
 import XCTest
 import GRDB
 
-func insertItem(_ db: Database, name: String) throws {
+func insertItem(_ db: DatabaseBase<some SQLiteAPI>, name: String) throws {
     try db.execute(sql: "INSERT INTO items (name) VALUES (?)", arguments: [name])
 }
 
@@ -34,10 +34,10 @@ private class Observer : TransactionObserver {
         allRecordedEvents.append(event.copy())
     }
     
-    func databaseDidCommit(_ db: Database) {
+    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
     }
 }
 

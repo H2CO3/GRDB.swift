@@ -3,7 +3,7 @@
 extension PersistableRecord {
     @inline(__always)
     @inlinable
-    public func willInsert(_ db: Database) throws { }
+    public func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws { }
     
     @inline(__always)
     @inlinable
@@ -32,8 +32,8 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public func insert(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     throws
     {
         try willSave(db)
@@ -112,8 +112,8 @@ extension PersistableRecord {
     ///   thrown if the insertion failed due to the IGNORE conflict policy.
     @inlinable // allow specialization so that empty callbacks are removed
     public func insertAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         as returnedType: T.Type)
     throws -> T
     {
@@ -174,11 +174,11 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     /// - precondition: `selection` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
-    public func insertAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+    public func insertAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> T
     {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
@@ -257,10 +257,10 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     /// - precondition: The result of `select` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
-    public func insertAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
-        fetch: (Statement) throws -> T,
+    public func insertAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
+        fetch: (StatementBase<API>) throws -> T,
         select: (DatabaseComponents) throws -> [any SQLSelectable]
     ) throws -> T
     where Self: TableRecord
@@ -325,8 +325,8 @@ extension PersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func insertAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         as returnedType: T.Type)
     throws -> T
     {
@@ -388,11 +388,11 @@ extension PersistableRecord {
     /// - precondition: `selection` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func insertAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+    public func insertAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> T
     {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
@@ -472,10 +472,10 @@ extension PersistableRecord {
     /// - precondition: The result of `select` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func insertAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
-        fetch: (Statement) throws -> T,
+    public func insertAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
+        fetch: (StatementBase<API>) throws -> T,
         select: (DatabaseComponents) throws -> [any SQLSelectable]
     ) throws -> T
     where Self: TableRecord
@@ -495,8 +495,8 @@ extension PersistableRecord {
     /// Executes an `INSERT` statement, and runs insertion callbacks.
     @inlinable // allow specialization so that empty callbacks are removed
     func insertWithCallbacks(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution?)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution?)
     throws -> InsertionSuccess
     {
         let (inserted, _) = try insertAndFetchWithCallbacks(db, onConflict: conflictResolution, selection: []) {
@@ -509,11 +509,11 @@ extension PersistableRecord {
     /// Executes an `INSERT` statement, with `RETURNING` clause if `selection`
     /// is not empty, and runs insertion callbacks.
     @inlinable // allow specialization so that empty callbacks are removed
-    func insertAndFetchWithCallbacks<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution?,
+    func insertAndFetchWithCallbacks<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution?,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> (InsertionSuccess, T)
     {
         try willInsert(db)

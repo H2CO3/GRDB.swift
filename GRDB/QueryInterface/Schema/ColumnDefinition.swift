@@ -62,7 +62,7 @@
 public final class ColumnDefinition {
     enum Indexing {
         case index
-        case unique(Database.ConflictResolution)
+        case unique(DatabaseConflictResolution)
     }
     
     struct ForeignKeyConstraint {
@@ -90,9 +90,9 @@ public final class ColumnDefinition {
     
     let name: String
     let type: Database.ColumnType?
-    var primaryKey: (conflictResolution: Database.ConflictResolution?, autoincrement: Bool)?
+    var primaryKey: (conflictResolution: DatabaseConflictResolution?, autoincrement: Bool)?
     var indexing: Indexing?
-    var notNullConflictResolution: Database.ConflictResolution?
+    var notNullConflictResolution: DatabaseConflictResolution?
     var checkConstraints: [SQLExpression] = []
     var foreignKeyConstraints: [ForeignKeyConstraint] = []
     var defaultExpression: SQLExpression?
@@ -133,7 +133,7 @@ public final class ColumnDefinition {
     /// - returns: `self` so that you can further refine the column definition.
     @discardableResult
     public func primaryKey(
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         autoincrement: Bool = false)
     -> Self
     {
@@ -159,7 +159,7 @@ public final class ColumnDefinition {
     /// - parameter conflictResolution: An optional ``Database/ConflictResolution``.
     /// - returns: `self` so that you can further refine the column definition.
     @discardableResult
-    public func notNull(onConflict conflictResolution: Database.ConflictResolution? = nil) -> Self {
+    public func notNull(onConflict conflictResolution: DatabaseConflictResolution? = nil) -> Self {
         notNullConflictResolution = conflictResolution ?? .abort
         return self
     }
@@ -182,7 +182,7 @@ public final class ColumnDefinition {
     /// - parameter conflictResolution: An optional ``Database/ConflictResolution``.
     /// - returns: `self` so that you can further refine the column definition.
     @discardableResult
-    public func unique(onConflict conflictResolution: Database.ConflictResolution? = nil) -> Self {
+    public func unique(onConflict conflictResolution: DatabaseConflictResolution? = nil) -> Self {
         indexing = .unique(conflictResolution ?? .abort)
         return self
     }

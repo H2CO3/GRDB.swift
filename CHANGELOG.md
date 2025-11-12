@@ -1731,7 +1731,7 @@ The [Advanced DatabasePool](README.md#advanced-databasepool) chapter has been ex
 
 ```diff 
  class DatabasePool {
-+    func barrierWriteWithoutTransaction<T>(_ updates: (Database) throws -> T) rethrows -> T
++    func barrierWriteWithoutTransaction<T>(_ updates: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T
 +    func invalidateReadOnlyConnections()
  }
  
@@ -1851,7 +1851,7 @@ The [ValueObservation](README.md#valueobservation) chapter has been updated so t
  }
  
  extension ValueObservation where Reducer == Void {
-+    static func tracking<Value>(fetch: @escaping (Database) throws -> Value) -> ValueObservation<ValueReducers.Fetch<Value>>
++    static func tracking<Value>(fetch: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Value) -> ValueObservation<ValueReducers.Fetch<Value>>
  }
 ```
 
@@ -1896,7 +1896,7 @@ The [ValueObservation Error Handling](README.md#valueobservation-error-handling)
 +    var configuration: Configuration { get }
 +
 +    #if compiler(>=5.0)
-+    func asyncRead(_ block: @escaping (Result<Database, Error>) -> Void)
++    func asyncRead(_ block: @escaping (Result<DatabaseBase<some SQLiteAPI>, Error>) -> Void)
 +    #endif
  }
  
@@ -1904,7 +1904,7 @@ The [ValueObservation Error Handling](README.md#valueobservation-error-handling)
 +    func asyncWriteWithoutTransaction(_ updates: @escaping (Database) -> Void)
 +
 +    #if compiler(>=5.0)
-+    func asyncWrite<T>(_ updates: @escaping (Database) throws -> T, completion: @escaping (Database, Result<T, Error>) -> Void)
++    func asyncWrite<T>(_ updates: @escaping (DatabaseBase<some SQLiteAPI>) throws -> T, completion: @escaping (Database, Result<T, Error>) -> Void)
 +    #endif
  }
 ```
@@ -1984,8 +1984,8 @@ The [ValueObservation Error Handling](README.md#valueobservation-error-handling)
 
  protocol FetchRequest {
 +    // deprecated
-     func prepare(_ db: Database, forSingleResult singleResult: Bool) throws -> (SelectStatement, RowAdapter?)
-+    func makePreparedRequest(_ db: Database, forSingleResult singleResult: Bool) throws -> PreparedRequest
+     func prepare(_ db: DatabaseBase<some SQLiteAPI>, forSingleResult singleResult: Bool) throws -> (SelectStatement, RowAdapter?)
++    func makePreparedRequest(_ db: DatabaseBase<some SQLiteAPI>, forSingleResult singleResult: Bool) throws -> PreparedRequest
  }
 ```
 
@@ -2189,37 +2189,37 @@ It comes with new features, but also a few breaking changes. The [GRDB 4 Migrati
  }
  
  class Row {
--    static func fetchCursor(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> RowCursor
--    static func fetchAll(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Row]
--    static func fetchOne(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> Row?
-+    static func fetchCursor(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> RowCursor
-+    static func fetchAll(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Row]
-+    static func fetchOne(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> Row?
+-    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> RowCursor
+-    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Row]
+-    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> Row?
++    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> RowCursor
++    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Row]
++    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> Row?
  }
  
  extension FetchableRecord {
--    static func fetchCursor(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> RecordCursor<Self>
--    static func fetchAll(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Self]
--    static func fetchOne(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> Self?
-+    static func fetchCursor(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> RecordCursor<Self>
-+    static func fetchAll(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Self]
-+    static func fetchOne(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> Self?
+-    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> RecordCursor<Self>
+-    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Self]
+-    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> Self?
++    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> RecordCursor<Self>
++    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Self]
++    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> Self?
  }
 
  extension DatabaseValueConvertible {
--    static func fetchCursor(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> DatabaseValueCursor<Self>
--    static func fetchAll(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Self]
--    static func fetchOne(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> Self?
-+    static func fetchCursor(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> DatabaseValueCursor<Self>
-+    static func fetchAll(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Self]
-+    static func fetchOne(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> Self?
+-    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> DatabaseValueCursor<Self>
+-    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Self]
+-    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> Self?
++    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> DatabaseValueCursor<Self>
++    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Self]
++    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> Self?
  }
  
  extension Optional where Wrapped: DatabaseValueConvertible {
--    static func fetchCursor(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> NullableDatabaseValueCursor<Wrapped>
--    static func fetchAll(_ db: Database, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Wrapped?]
-+    static func fetchCursor(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> NullableDatabaseValueCursor<Wrapped>
-+    static func fetchAll(_ db: Database, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Wrapped?]
+-    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> NullableDatabaseValueCursor<Wrapped>
+-    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ sql: String, arguments: StatementArguments? = nil, adapter: RowAdapter? = nil) throws -> [Wrapped?]
++    static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> NullableDatabaseValueCursor<Wrapped>
++    static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, sql: String, arguments: StatementArguments = StatementArguments(), adapter: RowAdapter? = nil) throws -> [Wrapped?]
  }
  
  extension TableRecord {
@@ -2324,7 +2324,7 @@ It comes with new features, but also a few breaking changes. The [GRDB 4 Migrati
  struct ValueObservation<Reducer> {
 -    var extent: Database.TransactionObservationExtent
 -    static func tracking(_ regions: DatabaseRegionConvertible..., reducer: Reducer) -> ValueObservation
--    static func tracking<Value>(_ regions: DatabaseRegionConvertible..., fetchDistinct fetch: @escaping (Database) throws -> Value) -> ValueObservation<DistinctUntilChangedValueReducer<RawValueReducer<Value>>> where Value: Equatable
+-    static func tracking<Value>(_ regions: DatabaseRegionConvertible..., fetchDistinct fetch: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Value) -> ValueObservation<DistinctUntilChangedValueReducer<RawValueReducer<Value>>> where Value: Equatable
  }
 ```
 
@@ -2467,12 +2467,12 @@ It comes with new features, but also a few breaking changes. The [GRDB 4 Migrati
 + class DatabaseFuture<Value> { }
 
  protocol FetchRequest {
--    func prepare(_ db: Database) throws -> (SelectStatement, RowAdapter?)
-+    func prepare(_ db: Database, forSingleResult singleResult: Bool) throws -> (SelectStatement, RowAdapter?)
+-    func prepare(_ db: DatabaseBase<some SQLiteAPI>) throws -> (SelectStatement, RowAdapter?)
++    func prepare(_ db: DatabaseBase<some SQLiteAPI>, forSingleResult singleResult: Bool) throws -> (SelectStatement, RowAdapter?)
  }
  
  struct AnyFetchRequest<T> : FetchRequest {
--    init(_ prepare: @escaping (Database) throws -> (SelectStatement, RowAdapter?))
+-    init(_ prepare: @escaping (DatabaseBase<some SQLiteAPI>) throws -> (SelectStatement, RowAdapter?))
 +    init(_ prepare: @escaping (Database, _ singleResult: Bool) throws -> (SelectStatement, RowAdapter?))
  }
  
@@ -2595,24 +2595,24 @@ This release comes with:
  }
  
  extension MutablePersistableRecord {
-+    mutating func updateChanges(_ db: Database, with change: (inout Self) throws -> Void) throws -> Bool
++    mutating func updateChanges(_ db: DatabaseBase<some SQLiteAPI>, with change: (inout Self) throws -> Void) throws -> Bool
  }
 
  extension PersistableRecord {
-+    func updateChanges(_ db: Database, with change: (Self) throws -> Void) throws -> Bool
++    func updateChanges(_ db: DatabaseBase<some SQLiteAPI>, with change: (Self) throws -> Void) throws -> Bool
  }
 
  struct ValueObservation<Reducer> {
 +    static func tracking(
 +        _ regions: [DatabaseRegionConvertible],
-+        reducer: @escaping (Database) throws -> Reducer)
++        reducer: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Reducer)
 +        -> ValueObservation
  }
  
 +extension ValueObservation where Reducer == Void {
 +    static func tracking<Value>(
 +        _ regions: [DatabaseRegionConvertible],
-+        fetch: @escaping (Database) throws -> Value)
++        fetch: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Value)
 +        -> ValueObservation<ValueReducers.Raw<Value>>
 +    static func combine<R1: ValueReducer, ...>(_ o1: ValueObservation<R1>, ...)
 +        -> ValueObservation<...>
@@ -2697,13 +2697,13 @@ It used to be possible to define custom types that adopt the [DatabaseReader and
  }
 
 +protocol DatabaseRegionConvertible {
-+    func databaseRegion(_ db: Database) throws -> DatabaseRegion
++    func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion
 +}
 +
 +extension DatabaseRegion: DatabaseRegionConvertible { }
 +
 +struct AnyDatabaseRegionConvertible: DatabaseRegionConvertible {
-+    init(_ region: @escaping (Database) throws -> DatabaseRegion)
++    init(_ region: @escaping (DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion)
 +    init(_ region: DatabaseRegionConvertible)
 +}
 
@@ -2719,7 +2719,7 @@ It used to be possible to define custom types that adopt the [DatabaseReader and
 +protocol ValueReducer {
 +    associatedtype Fetched
 +    associatedtype Value
-+    func fetch(_ db: Database) throws -> Fetched
++    func fetch(_ db: DatabaseBase<some SQLiteAPI>) throws -> Fetched
 +    mutating func value(_ fetched: Fetched) -> Value?
 +}
 +
@@ -2728,7 +2728,7 @@ It used to be possible to define custom types that adopt the [DatabaseReader and
 +}
 +
 +struct AnyValueReducer<Fetched, Value>: ValueReducer {
-+    init(fetch: @escaping (Database) throws -> Fetched, value: @escaping (Fetched) -> Value?)
++    init(fetch: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Fetched, value: @escaping (Fetched) -> Value?)
 +    init<Reducer: ValueReducer>(_ reducer: Reducer) where Reducer.Fetched == Fetched, Reducer.Value == Value
 +}
 
@@ -2751,12 +2751,12 @@ It used to be possible to define custom types that adopt the [DatabaseReader and
 +extension ValueObservation where Reducer == Void {
 +    static func tracking<Value>(
 +        _ regions: DatabaseRegionConvertible...,
-+        fetch: @escaping (Database) throws -> Value)
++        fetch: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Value)
 +        -> ValueObservation<ValueReducers.Raw<Value>>
 +
 +    static func tracking<Value>(
 +        _ regions: DatabaseRegionConvertible...,
-+        fetchDistinct: @escaping (Database) throws -> Value)
++        fetchDistinct: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Value)
 +        -> ValueObservation<ValueReducers.Distinct<Value>>
 +        where Value: Equatable
 +
@@ -2801,7 +2801,7 @@ This release comes with **Association Aggregates**. They let you compute values 
 ```diff
  protocol AggregatingRequest {
 -    func group(_ expressions: [SQLExpressible]) -> Self
-+    func group(_ expressions: @escaping (Database) throws -> [SQLExpressible]) -> Self
++    func group(_ expressions: @escaping (DatabaseBase<some SQLiteAPI>) throws -> [SQLExpressible]) -> Self
  }
 
 +extension AggregatingRequest {
@@ -2879,7 +2879,7 @@ Released September 16, 2018 &bull; [diff](https://github.com/groue/GRDB.swift/co
 
 ```diff
  protocol DatabaseWriter : DatabaseReader {
-+    func concurrentRead<T>(_ block: @escaping (Database) throws -> T) -> Future<T>
++    func concurrentRead<T>(_ block: @escaping (DatabaseBase<some SQLiteAPI>) throws -> T) -> Future<T>
 +    @available(*, deprecated)
      func readFromCurrentState(_ block: @escaping (Database) -> Void) throws
  }
@@ -2938,10 +2938,10 @@ Fixes:
 
 ```diff
  class DatabaseQueue {
--    func write<T>(_ block: (Database) throws -> T) rethrows -> T {
-+    func write<T>(_ block: (Database) throws -> T) throws -> T {
--    func unsafeReentrantRead<T>(_ block: (Database) throws -> T) throws -> T {
-+    func unsafeReentrantRead<T>(_ block: (Database) throws -> T) rethrows -> T {
+-    func write<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T {
++    func write<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T {
+-    func unsafeReentrantRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T {
++    func unsafeReentrantRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T {
  }
 ```
 
@@ -3189,14 +3189,14 @@ Released February 25, 2018 &bull; [diff](https://github.com/groue/GRDB.swift/com
 
  extension MutablePersistable {
 +    @discardableResult
-+    func updateChanges(_ db: Database, from record: MutablePersistable) throws -> Bool
++    func updateChanges(_ db: DatabaseBase<some SQLiteAPI>, from record: MutablePersistable) throws -> Bool
 +    func databaseEqual(_ record: Self) -> Bool
 +    func databaseChanges(from record: MutablePersistable) -> [String: DatabaseValue]
  }
  class Record {
--    final func updateChanges(_ db: Database) throws
+-    final func updateChanges(_ db: DatabaseBase<some SQLiteAPI>) throws
 +    @discardableResult
-+    final func updateChanges(_ db: Database) throws -> Bool
++    final func updateChanges(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
  }
  
 +@available(*, deprecated, message: "Prefer changes methods defined on the MutablePersistable protocol: databaseEqual(_:), databaseChanges(from:), updateChanges(from:)")
@@ -3212,7 +3212,7 @@ Released February 25, 2018 &bull; [diff](https://github.com/groue/GRDB.swift/com
 
  extension TableMapping {
 +    static func selectionSQL(alias: String? = nil) -> String
-+    static func numberOfSelectedColumns(_ db: Database) throws -> Int
++    static func numberOfSelectedColumns(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int
  }
 
 +struct EmptyRowAdapter: RowAdapter { }
@@ -3335,7 +3335,7 @@ Released January 18, 2018 &bull; [diff](https://github.com/groue/GRDB.swift/comp
  
  protocol Request {
 +    // Default implementation
-+    func fetchedRegion(_ db: Database) throws -> DatabaseRegion
++    func fetchedRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion
  }
  
 +extension Row: RandomAccessCollection {
@@ -3402,8 +3402,8 @@ Released January 11, 2018 &bull; [diff](https://github.com/groue/GRDB.swift/comp
  }
  
  extension RowConvertible where Self: TableMapping {
--    static func fetchOne(_ db: Database, key: [String: DatabaseValueConvertible?]) throws -> Self?
-+    static func fetchOne(_ db: Database, key: [String: DatabaseValueConvertible?]?) throws -> Self?
+-    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, key: [String: DatabaseValueConvertible?]) throws -> Self?
++    static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, key: [String: DatabaseValueConvertible?]?) throws -> Self?
  }
 ```
 
@@ -3533,7 +3533,7 @@ Released October 24, 2017 &bull; [diff](https://github.com/groue/GRDB.swift/comp
 
 ```diff
  extension Request {
-+    func asSQLRequest(_ db: Database, cached: Bool = false) throws -> SQLRequest
++    func asSQLRequest(_ db: DatabaseBase<some SQLiteAPI>, cached: Bool = false) throws -> SQLRequest
 }
 struct SQLRequest {
 +    let sql: String
@@ -3784,15 +3784,15 @@ New features have been added in order to plug a few holes and support the [RxGRD
  
 -extension TableMapping {
 +extension MutablePersistable {
-     @discardableResult static func deleteAll(_ db: Database) throws -> Int
-     @discardableResult static func deleteAll<Sequence: Swift.Sequence>(_ db: Database, keys: Sequence) throws -> Int where Sequence.Element: DatabaseValueConvertible
-     @discardableResult static func deleteOne<PrimaryKeyType: DatabaseValueConvertible>(_ db: Database, key: PrimaryKeyType?) throws -> Bool
-     @discardableResult static func deleteAll(_ db: Database, keys: [[String: DatabaseValueConvertible?]]) throws -> Int
-     @discardableResult static func deleteOne(_ db: Database, key: [String: DatabaseValueConvertible?]) throws -> Bool
+     @discardableResult static func deleteAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int
+     @discardableResult static func deleteAll<Sequence: Swift.Sequence>(_ db: DatabaseBase<some SQLiteAPI>, keys: Sequence) throws -> Int where Sequence.Element: DatabaseValueConvertible
+     @discardableResult static func deleteOne<PrimaryKeyType: DatabaseValueConvertible>(_ db: DatabaseBase<some SQLiteAPI>, key: PrimaryKeyType?) throws -> Bool
+     @discardableResult static func deleteAll(_ db: DatabaseBase<some SQLiteAPI>, keys: [[String: DatabaseValueConvertible?]]) throws -> Int
+     @discardableResult static func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, key: [String: DatabaseValueConvertible?]) throws -> Bool
  }
 -extension QueryInterfaceRequest {
 +extension QueryInterfaceRequest where RowDecoder: MutablePersistable {
-     @discardableResult func deleteAll(_ db: Database) throws -> Int
+     @discardableResult func deleteAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int
  }
 
  protocol TableMapping {
@@ -3862,30 +3862,30 @@ New features have been added in order to plug a few holes and support the [RxGRD
 +    static func fetchCursor(...) throws -> RecordCursor<Self>
  }
  extension TypedRequest where RowDecoder: RowConvertible {
--    func fetchCursor(_ db: Database) throws -> DatabaseCursor<RowDecoder>
-+    func fetchCursor(_ db: Database) throws -> RecordCursor<RowDecoder>
+-    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseCursor<RowDecoder>
++    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> RecordCursor<RowDecoder>
  }
  extension TypedRequest where RowDecoder: DatabaseValueConvertible {
--    func fetchCursor(_ db: Database) throws -> DatabaseCursor<RowDecoder>
-+    func fetchCursor(_ db: Database) throws -> DatabaseValueCursor<RowDecoder>
+-    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseCursor<RowDecoder>
++    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseValueCursor<RowDecoder>
  }
  extension TypedRequest where RowDecoder: DatabaseValueConvertible & StatementColumnConvertible {
-+    func fetchCursor(_ db: Database) throws -> ColumnCursor<RowDecoder>
++    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> ColumnCursor<RowDecoder>
  }
  extension TypedRequest where RowDecoder: _OptionalProtocol, RowDecoder._Wrapped: DatabaseValueConvertible {
--    func fetchCursor(_ db: Database) throws -> DatabaseCursor<RowDecoder._Wrapped?>
-+    func fetchCursor(_ db: Database) throws -> NullableDatabaseValueCursor<RowDecoder._Wrapped>
+-    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseCursor<RowDecoder._Wrapped?>
++    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> NullableDatabaseValueCursor<RowDecoder._Wrapped>
  }
  extension TypedRequest where RowDecoder: _OptionalProtocol, RowDecoder._Wrapped: DatabaseValueConvertible & StatementColumnConvertible {
-+    func fetchCursor(_ db: Database) throws -> NullableColumnCursor<RowDecoder._Wrapped>
++    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> NullableColumnCursor<RowDecoder._Wrapped>
  }
  extension TypedRequest where RowDecoder: Row {
--    func fetchCursor(_ db: Database) throws -> DatabaseCursor<Row>
-+    func fetchCursor(_ db: Database) throws -> RowCursor
+-    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseCursor<Row>
++    func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowCursor
  }
 
  extension TableMapping {
--    @available(*, deprecated) static func primaryKeyRowComparator(_ db: Database) throws -> (Row, Row) -> Bool
+-    @available(*, deprecated) static func primaryKeyRowComparator(_ db: DatabaseBase<some SQLiteAPI>) throws -> (Row, Row) -> Bool
  }
 
 +final class AnyDatabaseReader : DatabaseReader {
@@ -4048,7 +4048,7 @@ Released July 13, 2017 &bull; [diff](https://github.com/groue/GRDB.swift/compare
  }
  
  protocol DatabaseReader {
-+    func unsafeReentrantRead<T>(_ block: (Database) throws -> T) throws -> T
++    func unsafeReentrantRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T
  }
 ```
 
@@ -4110,7 +4110,7 @@ Released July 1, 2017 &bull; [diff](https://github.com/groue/GRDB.swift/compare/
 
  extension TableMapping {
 +    @available(*, deprecated)
-     static func primaryKeyRowComparator(_ db: Database) throws -> (Row, Row) -> Bool
+     static func primaryKeyRowComparator(_ db: DatabaseBase<some SQLiteAPI>) throws -> (Row, Row) -> Bool
  }
 ```
 
@@ -4235,8 +4235,8 @@ It comes with breaking changes, but the good news is that they are the last (unt
  }
 
  extension Request {
--    func adapted(_ adapter: @escaping (Database) throws -> RowAdapter) -> AnyRequest
-+    func adapted(_ adapter: @escaping (Database) throws -> RowAdapter) -> AdaptedRequest<Self>
+-    func adapted(_ adapter: @escaping (DatabaseBase<some SQLiteAPI>) throws -> RowAdapter) -> AnyRequest
++    func adapted(_ adapter: @escaping (DatabaseBase<some SQLiteAPI>) throws -> RowAdapter) -> AdaptedRequest<Self>
  }
 
 protocol TypedRequest : Request {
@@ -4245,8 +4245,8 @@ protocol TypedRequest : Request {
 }
 
  extension TypedRequest {
--    func adapted(_ adapter: @escaping (Database) throws -> RowAdapter) -> AnyTypedRequest<Fetched>
-+    func adapted(_ adapter: @escaping (Database) throws -> RowAdapter) -> AdaptedTypedRequest<Self>
+-    func adapted(_ adapter: @escaping (DatabaseBase<some SQLiteAPI>) throws -> RowAdapter) -> AnyTypedRequest<Fetched>
++    func adapted(_ adapter: @escaping (DatabaseBase<some SQLiteAPI>) throws -> RowAdapter) -> AdaptedTypedRequest<Self>
  }
 ```
 
@@ -4366,7 +4366,7 @@ Released April 3, 2017
 - Support for [reactive](https://reactivex.io) extensions:
     - `SelectStatement.SelectionInfo` is an opaque value that knows which database tables and columns are read by a [select statement](https://github.com/groue/GRDB.swift#prepared-statements).
     - `DatabaseEventKind.impacts(_ selectionInfo:SelectStatement.SelectionInfo)` tells whether a database change has any impact on the results of a select statement. See [Database Changes Observation](https://github.com/groue/GRDB.swift#database-changes-observation)
-    - `TableMapping.primaryKeyRowComparator(_ db: Database)` returns a function that compares two database rows and return true if and only if they have the same non-null primary key.
+    - `TableMapping.primaryKeyRowComparator(_ db: DatabaseBase<some SQLiteAPI>)` returns a function that compares two database rows and return true if and only if they have the same non-null primary key.
 
 **Breaking Changes**
 
@@ -4684,19 +4684,19 @@ Many APIs were changed:
  }
  
  final class DatabasePool {
--    func read<T>(_ block: (Database) throws -> T) rethrows -> T
--    func nonIsolatedRead<T>(_ block: (Database) throws -> T) rethrows -> T
+-    func read<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T
+-    func nonIsolatedRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T
 -    func readFromWrite(_ block: @escaping (Database) -> Void)
-+    func read<T>(_ block: (Database) throws -> T) throws -> T
-+    func nonIsolatedRead<T>(_ block: (Database) throws -> T) throws -> T
++    func read<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T
++    func nonIsolatedRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T
 +    func readFromWrite(_ block: @escaping (Database) -> Void) throws
  }
  
  protocol DatabaseReader {
--    func read<T>(_ block: (Database) throws -> T) rethrows -> T
--    func nonIsolatedRead<T>(_ block: (Database) throws -> T) rethrows -> T
-+    func read<T>(_ block: (Database) throws -> T) throws -> T
-+    func nonIsolatedRead<T>(_ block: (Database) throws -> T) throws -> T
+-    func read<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T
+-    func nonIsolatedRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T
++    func read<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T
++    func nonIsolatedRead<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T
  }
  
  protocol DatabaseWriter {
@@ -4747,13 +4747,13 @@ Many APIs were changed:
  }
  
  protocol MutablePersistable : TableMapping {
--    func exists(_ db: Database) -> Bool
-+    func exists(_ db: Database) throws -> Bool
+-    func exists(_ db: DatabaseBase<some SQLiteAPI>) -> Bool
++    func exists(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
  }
  
  extension MutablePersistable {
--    func performExists(_ db: Database) -> Bool
-+    func performExists(_ db: Database) throws -> Bool
+-    func performExists(_ db: DatabaseBase<some SQLiteAPI>) -> Bool
++    func performExists(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
  }
 
  extension QueryInterfaceRequest {
@@ -4780,8 +4780,8 @@ Many APIs were changed:
  }
  
  extension TableMapping {
--    static func fetchCount(_ db: Database) -> Int
-+    static func fetchCount(_ db: Database) throws -> Int
+-    static func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) -> Int
++    static func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int
  }
 ```
 
@@ -4959,7 +4959,7 @@ Released October 16, 2016
      protocol VirtualTableModule {
     -    func moduleArguments(_ definition: TableDefinition) -> [String]
     +    func moduleArguments(for definition: TableDefinition, in db: Database) throws -> [String]
-    +    func database(_ db: Database, didCreate tableName: String, using definition: TableDefinition) throws
+    +    func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: TableDefinition) throws
      }
     ```
 
@@ -5032,7 +5032,7 @@ Released September 28, 2016
     
 **Breaking Changes**
 
-- The SQLForeignKeyAction, SQLColumnType, SQLConflictResolution, and SQLCollation types have been renamed Database.ForeignKeyAction, Database.ColumnType, Database.ConflictResolution, and Database.CollationName.
+- The SQLForeignKeyAction, SQLColumnType, SQLConflictResolution, and SQLCollation types have been renamed Database.ForeignKeyAction, Database.ColumnType, DatabaseConflictResolution, and Database.CollationName.
 
 
 ## 0.84.0
@@ -5295,8 +5295,8 @@ Released September 11, 2016
     -    func databaseDidRollback(db: Database)
     +    func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool
     +    func databaseDidChange(with event: DatabaseEvent)
-    +    func databaseDidCommit(_ db: Database)
-    +    func databaseDidRollback(_ db: Database)
+    +    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>)
+    +    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>)
      #if SQLITE_ENABLE_PREUPDATE_HOOK
     -    func databaseWillChangeWithEvent(event: DatabasePreUpdateEvent)
     +    func databaseWillChange(with event: DatabasePreUpdateEvent)
@@ -5319,19 +5319,19 @@ Released September 11, 2016
     -    func delete(db: Database) throws -> Bool
     -    func exists(db: Database) -> Bool
     +    mutating func didInsert(with rowID: Int64, for column: String?)
-    +    mutating func insert(_ db: Database) throws
-    +    func update(_ db: Database, columns: Set<String>) throws
-    +    mutating func save(_ db: Database) throws
-    +    @discardableResult func delete(_ db: Database) throws -> Bool
-    +    func exists(_ db: Database) -> Bool
+    +    mutating func insert(_ db: DatabaseBase<some SQLiteAPI>) throws
+    +    func update(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws
+    +    mutating func save(_ db: DatabaseBase<some SQLiteAPI>) throws
+    +    @discardableResult func delete(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
+    +    func exists(_ db: DatabaseBase<some SQLiteAPI>) -> Bool
      }
      protocol Persistable : MutablePersistable {
     -    func didInsertWithRowID(rowID: Int64, forColumn column: String?)
     -    func insert(db: Database) throws
     -    func save(db: Database) throws
     +    func didInsert(with rowID: Int64, for column: String?)
-    +    func insert(_ db: Database) throws
-    +    func save(_ db: Database) throws
+    +    func insert(_ db: DatabaseBase<some SQLiteAPI>) throws
+    +    func save(_ db: DatabaseBase<some SQLiteAPI>) throws
      }
      protocol TableMapping {
     -    static func databaseTableName() -> String
@@ -5351,10 +5351,10 @@ Released September 11, 2016
     +    class var databaseTableName: String
     +    func awakeFromFetch(row: Row)
     +    func didInsert(with rowID: Int64, for column: String?)
-    +    func update(_ db: Database, columns: Set<String>) throws
-    +    func insert(_ db: Database) throws
-    +    func save(_ db: Database) throws
-    +    @discardableResult func delete(_ db: Database) throws -> Bool
+    +    func update(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws
+    +    func insert(_ db: DatabaseBase<some SQLiteAPI>) throws
+    +    func save(_ db: DatabaseBase<some SQLiteAPI>) throws
+    +    @discardableResult func delete(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
      }
     ```
     
@@ -5363,7 +5363,7 @@ Released September 11, 2016
     ```diff
      protocol FetchRequest {
     -    func prepare(db: Database) throws -> (SelectStatement, RowAdapter?)
-    +    func prepare(_ db: Database) throws -> (SelectStatement, RowAdapter?)
+    +    func prepare(_ db: DatabaseBase<some SQLiteAPI>) throws -> (SelectStatement, RowAdapter?)
      }
     -struct SQLColumn {}
     +struct Column {}
@@ -5943,10 +5943,10 @@ Released May 17, 2016
     
     ```diff
      struct DatabaseMigrator {
-    -    mutating func registerMigration(identifier: String, withDisabledForeignKeyChecks disabledForeignKeyChecks: Bool = false, migrate: (Database) throws -> Void)
-    +    mutating func registerMigration(identifier: String, migrate: (Database) throws -> Void)
+    -    mutating func registerMigration(identifier: String, withDisabledForeignKeyChecks disabledForeignKeyChecks: Bool = false, migrate: (DatabaseBase<some SQLiteAPI>) throws -> Void)
+    +    mutating func registerMigration(identifier: String, migrate: (DatabaseBase<some SQLiteAPI>) throws -> Void)
     +    @available(iOS 8.2, OSX 10.10, *)
-    +    mutating func registerMigrationWithDisabledForeignKeyChecks(identifier: String, migrate: (Database) throws -> Void)
+    +    mutating func registerMigrationWithDisabledForeignKeyChecks(identifier: String, migrate: (DatabaseBase<some SQLiteAPI>) throws -> Void)
     ```
 
 

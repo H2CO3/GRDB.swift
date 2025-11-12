@@ -289,7 +289,7 @@ class TransactionDateTests: GRDBTestCase {
                 case name
             }
             
-            mutating func willInsert(_ db: Database) throws {
+            mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
                 isInserted = true
                 try initializeTimestamps(db)
             }
@@ -333,7 +333,7 @@ class TransactionDateTests: GRDBTestCase {
                 self.name = name
             }
             
-            func willInsert(_ db: Database) throws {
+            func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
                 // Can't call initializeTimestamps because it is mutating
                 if creationDate == nil {
                     creationDate = try db.transactionDate
@@ -385,7 +385,7 @@ extension TimestampedRecord {
     /// `TimestampedRecord` types that customize the `willInsert`
     /// persistence callback should call `initializeTimestamps` from
     /// their implementation.
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try initializeTimestamps(db)
     }
     
@@ -395,7 +395,7 @@ extension TimestampedRecord {
     /// It is called automatically before insertion, if your type does not
     /// customize the `willInsert` persistence callback. If you customize
     /// this callback, call `initializeTimestamps` from your implementation.
-    mutating func initializeTimestamps(_ db: Database) throws {
+    mutating func initializeTimestamps(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if creationDate == nil {
             creationDate = try db.transactionDate
         }
@@ -409,7 +409,7 @@ extension TimestampedRecord {
     ///
     /// - parameter modificationDate: The modification date. If nil, the
     ///   transaction date is used.
-    mutating func updateWithTimestamp(_ db: Database, modificationDate: Date? = nil) throws {
+    mutating func updateWithTimestamp(_ db: DatabaseBase<some SQLiteAPI>, modificationDate: Date? = nil) throws {
         self.modificationDate = try modificationDate ?? db.transactionDate
         try update(db)
     }
@@ -442,7 +442,7 @@ extension TimestampedRecord {
     /// - returns: Whether the record was changed and updated.
     @discardableResult
     mutating func updateChangesWithTimestamp(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         modificationDate: Date? = nil,
         modify: (inout Self) -> Void)
     throws -> Bool
@@ -470,7 +470,7 @@ extension TimestampedRecord {
     ///
     /// - parameter modificationDate: The modification date. If nil, the
     ///   transaction date is used.
-    mutating func touch(_ db: Database, modificationDate: Date? = nil) throws {
+    mutating func touch(_ db: DatabaseBase<some SQLiteAPI>, modificationDate: Date? = nil) throws {
         try updateChanges(db) {
             $0.modificationDate = try modificationDate ?? db.transactionDate
         }

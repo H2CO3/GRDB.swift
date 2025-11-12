@@ -5,7 +5,7 @@ struct SQLIndexGenerator {
     let options: IndexOptions
     let condition: SQLExpression?
     
-    func sql(_ db: Database) throws -> String {
+    func sql(_ db: DatabaseBase<some SQLiteAPI>) throws -> String {
         var sql: SQL = "CREATE"
         
         if options.contains(.unique) {

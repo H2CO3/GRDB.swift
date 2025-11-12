@@ -9,7 +9,7 @@ extension ValueReducers {
             let base: Base.Fetcher
             let willFetch: @Sendable () -> Void
             
-            public func fetch(_ db: Database) throws -> Base.Fetcher.Value {
+            public func fetch(_ db: DatabaseBase<Base.API>) throws -> Base.Fetcher.Value {
                 willFetch()
                 return try base.fetch(db)
             }

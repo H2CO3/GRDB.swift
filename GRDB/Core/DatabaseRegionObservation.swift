@@ -6,7 +6,7 @@ import Foundation
 public struct DatabaseRegionObservation: Sendable {
     /// A closure that is evaluated when the observation starts, and returns
     /// the observed database region.
-    var observedRegion: @Sendable (Database) throws -> DatabaseRegion
+    var observedRegion: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion
 }
 
 extension DatabaseRegionObservation {
@@ -87,7 +87,7 @@ extension DatabaseRegionObservation {
     public func start(
         in writer: any DatabaseWriter,
         onError: @escaping @Sendable (Error) -> Void,
-        onChange: @escaping @Sendable (Database) -> Void)
+        onChange: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) -> Void)
     -> AnyDatabaseCancellable
     {
         let stateMutex = Mutex(ObservationState.pending)
@@ -146,12 +146,12 @@ extension DatabaseRegionObservation {
 }
 #endif
 
-private class DatabaseRegionObserver: TransactionObserver {
+private class DatabaseRegionObserver: TransactionObserverBase {
     let region: DatabaseRegion
-    let onChange: @Sendable (Database) -> Void
+    let onChange: @Sendable (DatabaseBase<some SQLiteAPI>) -> Void
     var isChanged = false
     
-    init(region: DatabaseRegion, onChange: @escaping @Sendable (Database) -> Void) {
+    init(region: DatabaseRegion, onChange: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) -> Void) {
         self.region = region
         self.onChange = onChange
     }
@@ -172,14 +172,14 @@ private class DatabaseRegionObserver: TransactionObserver {
         }
     }
     
-    func databaseDidCommit(_ db: Database) {
+    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
         guard isChanged else { return }
         isChanged = false
         
         onChange(db)
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
         isChanged = false
     }
 }

@@ -322,7 +322,7 @@ extension FetchableRecord {
     /// - returns: A ``RecordCursor`` over fetched records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchCursor(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> RecordCursor<Self>
@@ -350,7 +350,7 @@ extension FetchableRecord {
     /// - returns: An array of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchAll(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> [Self]
@@ -378,7 +378,7 @@ extension FetchableRecord {
     /// - returns: An optional record.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchOne(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> Self?
@@ -408,7 +408,7 @@ extension FetchableRecord where Self: Hashable {
     /// - returns: A set of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchSet(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> Set<Self>
@@ -450,7 +450,7 @@ extension FetchableRecord {
     /// - returns: A ``RecordCursor`` over fetched records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchCursor(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -479,7 +479,7 @@ extension FetchableRecord {
     /// - returns: An array of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -508,7 +508,7 @@ extension FetchableRecord {
     /// - returns: An optional record.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchOne(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -539,7 +539,7 @@ extension FetchableRecord where Self: Hashable {
     /// - returns: A set of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchSet(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -599,7 +599,7 @@ extension FetchableRecord {
     ///     - request: a fetch request.
     /// - returns: A ``RecordCursor`` over fetched records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchCursor(_ db: Database, _ request: some FetchRequest) throws -> RecordCursor<Self> {
+    public static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> RecordCursor<Self> {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         precondition(request.supplementaryFetch == nil, "Not implemented: fetchCursor with supplementary fetch")
         return try fetchCursor(request.statement, adapter: request.adapter)
@@ -642,7 +642,7 @@ extension FetchableRecord {
     ///     - request: a fetch request.
     /// - returns: An array of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchAll(_ db: Database, _ request: some FetchRequest) throws -> [Self] {
+    public static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> [Self] {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         if let supplementaryFetch = request.supplementaryFetch {
             let rows = try Row.fetchAll(request.statement, adapter: request.adapter)
@@ -689,7 +689,7 @@ extension FetchableRecord {
     ///     - request: a fetch request.
     /// - returns: An optional record.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchOne(_ db: Database, _ request: some FetchRequest) throws -> Self? {
+    public static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> Self? {
         let request = try request.makePreparedRequest(db, forSingleResult: true)
         if let supplementaryFetch = request.supplementaryFetch {
             guard let row = try Row.fetchOne(request.statement, adapter: request.adapter) else {
@@ -741,7 +741,7 @@ extension FetchableRecord where Self: Hashable {
     ///     - request: a fetch request.
     /// - returns: A set of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchSet(_ db: Database, _ request: some FetchRequest) throws -> Set<Self> {
+    public static func fetchSet(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> Set<Self> {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         if let supplementaryFetch = request.supplementaryFetch {
             let rows = try Row.fetchAll(request.statement, adapter: request.adapter)
@@ -805,7 +805,7 @@ extension FetchRequest where RowDecoder: FetchableRecord {
     ///     - db: A database connection.
     /// - returns: A ``RecordCursor`` over fetched records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> RecordCursor<RowDecoder> {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> RecordCursor<RowDecoder> {
         try RowDecoder.fetchCursor(db, self)
     }
     
@@ -845,7 +845,7 @@ extension FetchRequest where RowDecoder: FetchableRecord {
     ///     - db: A database connection.
     /// - returns: An array of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [RowDecoder] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [RowDecoder] {
         try RowDecoder.fetchAll(db, self)
     }
     
@@ -884,7 +884,7 @@ extension FetchRequest where RowDecoder: FetchableRecord {
     ///     - db: A database connection.
     /// - returns: An optional record.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> RowDecoder? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowDecoder? {
         try RowDecoder.fetchOne(db, self)
     }
 }
@@ -926,7 +926,7 @@ extension FetchRequest where RowDecoder: FetchableRecord & Hashable {
     ///     - db: A database connection.
     /// - returns: A set of records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<RowDecoder> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<RowDecoder> {
         try RowDecoder.fetchSet(db, self)
     }
 }

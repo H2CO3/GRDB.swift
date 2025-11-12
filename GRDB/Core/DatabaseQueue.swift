@@ -4,8 +4,8 @@ import Foundation
 import UIKit
 #endif
 
-public final class DatabaseQueue {
-    private let writer: SerializedDatabase
+public final class DatabaseQueueBase<API: SQLiteAPI> {
+    private let writer: SerializedDatabase<API>
     
     /// If Database Suspension is enabled, this array contains the necessary `NotificationCenter` observers.
     private var suspensionObservers: [NSObjectProtocol] = []
@@ -124,9 +124,9 @@ public final class DatabaseQueue {
 }
 
 // @unchecked because of suspensionObservers
-extension DatabaseQueue: @unchecked Sendable { }
+extension DatabaseQueueBase: @unchecked Sendable { }
 
-extension DatabaseQueue {
+extension DatabaseQueueBase {
     
     // MARK: - Memory management
     
@@ -183,7 +183,7 @@ extension DatabaseQueue {
     #endif
 }
 
-extension DatabaseQueue: DatabaseReader {
+extension DatabaseQueueBase: DatabaseReaderBase {
     public func close() throws {
         try writer.sync { try $0.close() }
     }
@@ -225,7 +225,7 @@ extension DatabaseQueue: DatabaseReader {
     // MARK: - Reading from Database
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func read<T>(_ value: (Database) throws -> T) throws -> T {
+    public func read<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try writer.sync { db in
             try db.isolated(readOnly: true) {
                 try value(db)
@@ -234,7 +234,7 @@ extension DatabaseQueue: DatabaseReader {
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await writer.execute { db in
             try db.isolated(readOnly: true) {
@@ -244,7 +244,7 @@ extension DatabaseQueue: DatabaseReader {
     }
     
     public func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         writer.async { db in
             defer {
@@ -273,28 +273,28 @@ extension DatabaseQueue: DatabaseReader {
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func unsafeRead<T>(_ value: (Database) throws -> T) rethrows -> T {
+    public func unsafeRead<T>(_ value: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.sync(value)
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await writer.execute(value)
     }
     
     public func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         writer.async { value(.success($0)) }
     }
     
-    public func unsafeReentrantRead<T>(_ value: (Database) throws -> T) rethrows -> T {
+    public func unsafeReentrantRead<T>(_ value: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.reentrantSync(value)
     }
     
     public func spawnConcurrentRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         // Check that we're on the writer queue...
         writer.execute { db in
@@ -349,7 +349,7 @@ extension DatabaseQueue: DatabaseReader {
     }
 }
 
-extension DatabaseQueue: DatabaseWriter {
+extension DatabaseQueueBase: DatabaseWriterBase {
     // MARK: - Writing in Database
     
     /// Wraps database operations inside a database transaction.
@@ -381,7 +381,7 @@ extension DatabaseQueue: DatabaseWriter {
     /// - throws: The error thrown by `updates`, or by the wrapping transaction.
     public func inTransaction(
         _ kind: Database.TransactionKind? = nil,
-        _ updates: (Database) throws -> Database.TransactionCompletion)
+        _ updates: (DatabaseBase<API>) throws -> Database.TransactionCompletion)
     throws
     {
         try writer.sync { db in
@@ -392,29 +392,29 @@ extension DatabaseQueue: DatabaseWriter {
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func writeWithoutTransaction<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func writeWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.sync(updates)
     }
     
     public func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await writer.execute(updates)
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func barrierWriteWithoutTransaction<T>(_ updates: (Database) throws -> T) throws -> T {
+    public func barrierWriteWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) throws -> T {
         try writer.sync(updates)
     }
     
     public func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await writer.execute(updates)
     }
     
     public func asyncBarrierWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ updates: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         writer.async { updates(.success($0)) }
     }
@@ -453,16 +453,16 @@ extension DatabaseQueue: DatabaseWriter {
     ///
     /// - parameter updates: A closure which accesses the database.
     /// - throws: The error thrown by `updates`.
-    public func inDatabase<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func inDatabase<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.sync(updates)
     }
     
-    public func unsafeReentrantWrite<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func unsafeReentrantWrite<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.reentrantSync(updates)
     }
     
     public func asyncWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Database) -> Void
+        _ updates: @escaping @Sendable (DatabaseBase<API>) -> Void
     ) {
         writer.async(updates)
     }
@@ -470,7 +470,7 @@ extension DatabaseQueue: DatabaseWriter {
 
 // MARK: - Temp Copy
 
-extension DatabaseQueue {
+extension DatabaseQueueBase {
     /// Returns a connection to an in-memory copy of the database at `path`.
     ///
     /// Changes performed on the returned connection do not impact the

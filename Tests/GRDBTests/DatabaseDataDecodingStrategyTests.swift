@@ -38,7 +38,7 @@ private struct RecordWithOptionalData<Strategy: StrategyProvider>: FetchableReco
 class DatabaseDataDecodingStrategyTests: GRDBTestCase {
     /// test the conversion from a database value to a data extracted from a record
     private func test<T: FetchableRecord>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         record: T.Type,
         data: (T) -> Data?,
         databaseValue: (any DatabaseValueConvertible)?,
@@ -59,7 +59,7 @@ class DatabaseDataDecodingStrategyTests: GRDBTestCase {
     
     /// test the conversion from a database value to a data with a given strategy
     private func test<Strategy: StrategyProvider>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         strategy: Strategy.Type,
         databaseValue: some DatabaseValueConvertible,
         _ test: (Data) -> Void)
@@ -69,7 +69,7 @@ class DatabaseDataDecodingStrategyTests: GRDBTestCase {
         try self.test(db, record: RecordWithOptionalData<Strategy>.self, data: { $0.data }, databaseValue: databaseValue, with: { test($0!) })
     }
     
-    private func testNullDecoding<Strategy: StrategyProvider>(_ db: Database, strategy: Strategy.Type) throws {
+    private func testNullDecoding<Strategy: StrategyProvider>(_ db: DatabaseBase<some SQLiteAPI>, strategy: Strategy.Type) throws {
         try self.test(db, record: RecordWithOptionalData<Strategy>.self, data: { $0.data }, databaseValue: nil) { data in
             XCTAssertNil(data)
         }

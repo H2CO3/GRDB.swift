@@ -1148,7 +1148,7 @@ final class DatabaseDumpTests: GRDBTestCase {
     
     func test_dumpTables_single_view_with_schema_source() throws {
         struct SchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 ["teamId", "name"]
             }
         }

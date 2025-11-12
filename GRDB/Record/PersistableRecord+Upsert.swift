@@ -31,7 +31,7 @@ extension PersistableRecord {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs, or any
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
-    public func upsert(_ db: Database) throws {
+    public func upsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try willSave(db)
         
         var saved: PersistenceSuccess?
@@ -127,7 +127,7 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public func upsertAndFetch(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
     throws -> Self
@@ -154,7 +154,7 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public func upsertAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         as returnedType: T.Type,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
@@ -209,7 +209,7 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func upsert(_ db: Database) throws {
+    public func upsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try willSave(db)
         
         var saved: PersistenceSuccess?
@@ -305,7 +305,7 @@ extension PersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func upsertAndFetch(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
     throws -> Self
@@ -333,7 +333,7 @@ extension PersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func upsertAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         as returnedType: T.Type,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
@@ -364,7 +364,7 @@ extension PersistableRecord {
 
 extension PersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
-    func upsertWithCallbacks(_ db: Database)
+    func upsertWithCallbacks(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> InsertionSuccess
     {
         let (inserted, _) = try upsertAndFetchWithCallbacks(
@@ -377,7 +377,7 @@ extension PersistableRecord {
     
     @inlinable // allow specialization so that empty callbacks are removed
     func upsertAndFetchWithCallbacks<T>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])?,
         selection: [any SQLSelectable],

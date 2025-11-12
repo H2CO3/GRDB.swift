@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
@@ -43,9 +43,9 @@ public struct LineDumpFormat: Sendable {
 }
 
 extension LineDumpFormat: DumpFormat {
-    public mutating func writeRow(
-        _ db: Database,
-        statement: Statement,
+    public mutating func writeRow<API>(
+        _ db: DatabaseBase<API>,
+        statement: StatementBase<API>,
         to stream: inout DumpStream)
     {
         var lines: [(column: String, value: String)] = []
@@ -76,9 +76,9 @@ extension LineDumpFormat: DumpFormat {
         }
     }
     
-    public mutating func finalize(
-        _ db: Database,
-        statement: Statement,
+    public mutating func finalize<API>(
+        _ db: DatabaseBase<API>,
+        statement: StatementBase<API>,
         to stream: inout DumpStream)
     {
         if firstRow == false {
@@ -88,7 +88,7 @@ extension LineDumpFormat: DumpFormat {
     }
     
     func formattedValue(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         in sqliteStatement: SQLiteStatement,
         at index: CInt)
     -> String

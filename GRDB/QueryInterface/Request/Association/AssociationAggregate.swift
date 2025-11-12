@@ -1131,7 +1131,7 @@ public func abs<RowDecoder>(_ aggregate: AssociationAggregate<RowDecoder>)
 /// Related SQLite documentation: <https://www.sqlite.org/lang_expr.html#castexpr>
 public func cast<RowDecoder>(
     _ aggregate: AssociationAggregate<RowDecoder>,
-    as storageClass: Database.StorageClass)
+    as storageClass: DatabaseStorageClass)
 -> AssociationAggregate<RowDecoder>
 {
     aggregate

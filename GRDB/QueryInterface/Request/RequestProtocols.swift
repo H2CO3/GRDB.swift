@@ -40,6 +40,7 @@ public protocol TypedRequest<RowDecoder> {
 /// - ``select(_:)-30yzl``
 /// - ``select(_:)-7e2y5``
 public protocol SelectionRequest {
+#warning("TODO: expose a version with default api")
     /// Defines the result columns.
     ///
     /// The `selection` parameter is a closure that accepts a database
@@ -67,10 +68,12 @@ public protocol SelectionRequest {
     ///
     /// - parameter selection: A closure that accepts a database connection and
     ///   returns an array of result columns.
-    func selectWhenConnected(
-        _ selection: @escaping @Sendable (Database) throws -> [any SQLSelectable]
+    func selectWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ selection: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLSelectable]
     ) -> Self
     
+#warning("TODO: expose a version with default api")
     /// Appends result columns to the selected columns.
     ///
     /// The `selection` parameter is a closure that accepts a database
@@ -89,8 +92,9 @@ public protocol SelectionRequest {
     ///
     /// - parameter selection: A closure that accepts a database connection and
     ///   returns an array of result columns.
-    func annotatedWhenConnected(
-        with selection: @escaping @Sendable (Database) throws -> [any SQLSelectable]
+    func annotatedWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        with selection: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLSelectable]
     ) -> Self
 }
 
@@ -358,6 +362,7 @@ extension SelectionRequest where Self: TypedRequest, Self.RowDecoder: TableRecor
 ///
 /// - ``filter(_:)-48a4t``
 public protocol FilteredRequest {
+#warning("TODO: expose a version with default api")
     /// Filters the fetched rows with a boolean SQL expression.
     ///
     /// The `predicate` parameter is a closure that accepts a database
@@ -377,8 +382,9 @@ public protocol FilteredRequest {
     ///
     /// - parameter predicate: A closure that accepts a database connection and
     ///   returns a boolean SQL expression.
-    func filterWhenConnected(
-        _ predicate: @escaping @Sendable (Database) throws -> any SQLExpressible
+    func filterWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ predicate: @escaping @Sendable (DatabaseBase<$API>) throws -> any SQLExpressible
     ) -> Self
 }
 
@@ -747,7 +753,10 @@ extension TableRequest where Self: FilteredRequest, Self: TypedRequest {
     ///     let request = try Player...filterWhenConnected(keys: { db in [1, 2, 3] })
     ///
     /// - parameter keys: A collection of primary keys
-    fileprivate func filterWhenConnected(keys: @escaping @Sendable (Database) throws -> [SQLExpression]) -> Self {
+    fileprivate func filterWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        keys: @escaping @Sendable (DatabaseBase<API>) throws -> [SQLExpression]
+    ) -> Self {
         let databaseTableName = self.databaseTableName
         return filterWhenConnected { db in
             // Don't bother removing NULLs. We'd lose CPU cycles, and this does not
@@ -992,6 +1001,7 @@ extension TableRequest where Self: AggregatingRequest {
 /// - ``group(_:)-4216o``
 /// - ``having(_:)-2ssg9``
 public protocol AggregatingRequest {
+#warning("TODO: expose a version with default api")
     /// Returns an aggregate request grouped on the given SQL expressions.
     ///
     /// The `expressions` parameter is a closure that accepts a database
@@ -1014,10 +1024,12 @@ public protocol AggregatingRequest {
     ///
     /// - parameter expressions: A closure that accepts a database connection
     ///   and returns an array of SQL expressions.
-    func groupWhenConnected(
-        _ expressions: @escaping @Sendable (Database) throws -> [any SQLExpressible]
+    func groupWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ expressions: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLExpressible]
     ) -> Self
     
+#warning("TODO: expose a version with default api")
     /// Filters the aggregated groups with a boolean SQL expression.
     ///
     /// The `predicate` parameter is a closure that accepts a database
@@ -1040,8 +1052,9 @@ public protocol AggregatingRequest {
     ///
     /// - parameter predicate: A closure that accepts a database connection and
     ///   returns a boolean SQL expression.
-    func havingWhenConnected(
-        _ predicate: @escaping @Sendable (Database) throws -> any SQLExpressible
+    func havingWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ predicate: @escaping @Sendable (DatabaseBase<API>) throws -> any SQLExpressible
     ) -> Self
 }
 
@@ -1270,6 +1283,7 @@ extension AggregatingRequest where Self: TypedRequest, Self.RowDecoder: TableRec
 /// - ``order(_:)-63rzl``
 /// - ``order(_:)-6co0m``
 public protocol OrderedRequest {
+#warning("TODO: expose a version with default api")
     /// Sorts the fetched rows according to the given SQL ordering terms.
     ///
     /// The `orderings` parameter is a closure that accepts a database
@@ -1297,8 +1311,9 @@ public protocol OrderedRequest {
     ///
     /// - parameter orderings: A closure that accepts a database connection and
     ///   returns an array of SQL ordering terms.
-    func orderWhenConnected(
-        _ orderings: @escaping @Sendable (Database) throws -> [any SQLOrderingTerm]
+    func orderWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ orderings: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLOrderingTerm]
     ) -> Self
     
     /// Returns a request with reversed ordering.

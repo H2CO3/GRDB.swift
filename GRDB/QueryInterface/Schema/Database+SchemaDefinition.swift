@@ -1,4 +1,4 @@
-extension Database {
+extension DatabaseBase {
     
     // MARK: - Database Schema
     

@@ -11,7 +11,7 @@ class Email : Record, Hashable {
         super.init()
     }
     
-    static func setup(_ db: Database) throws {
+    static func setup(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.execute(sql: """
             CREATE TABLE emails (
                 email TEXT NOT NULL PRIMARY KEY ON CONFLICT REPLACE,

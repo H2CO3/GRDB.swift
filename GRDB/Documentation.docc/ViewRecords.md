@@ -125,7 +125,7 @@ To instruct GRDB about the primary key, define a **schema source**, a type that 
 struct GameSchemaSource: DatabaseSchemaSource {
     /// Returns the names of the columns for the primary key in the
     /// provided database view.
-    func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+    func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
         ["id"]
     }
 }

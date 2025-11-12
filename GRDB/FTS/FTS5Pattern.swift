@@ -173,7 +173,7 @@ public struct FTS5Pattern: Sendable {
     }
 }
 
-extension Database {
+extension DatabaseBase {
     
     // MARK: - FTS5
     

@@ -22,6 +22,7 @@ public struct FTS3Pattern: Sendable {
     /// It is guaranteed to be a valid FTS3/4 pattern.
     public let rawPattern: String
     
+#warning("TODO: expose a version with default api")
     /// Creates a pattern from a raw pattern string.
     ///
     /// The pattern syntax is documented at <https://www.sqlite.org/fts3.html#full_text_index_queries>
@@ -37,14 +38,17 @@ public struct FTS3Pattern: Sendable {
     /// ```
     ///
     /// - throws: A ``DatabaseError`` if the pattern has an invalid syntax.
-    public init(rawPattern: String) throws {
+    public init<API: SQLiteAPI>(
+        rawPattern: String,
+        api: API.Type
+    ) throws {
         // Correctness above all: use SQLite to validate the pattern.
         //
         // Invalid patterns have SQLite return an error on the first
         // call to sqlite3_step() on a statement that matches against
         // that pattern.
         do {
-            try DatabaseQueue().inDatabase { db in
+            try DatabaseQueueBase<API>().inDatabase { db in
                 try db.execute(literal: """
                     CREATE VIRTUAL TABLE documents USING fts3();
                     SELECT * FROM documents WHERE content MATCH \(rawPattern);
@@ -59,6 +63,7 @@ public struct FTS3Pattern: Sendable {
         self.rawPattern = rawPattern
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a pattern that matches any token found in the input string.
     ///
     /// The result is nil if no pattern could be built.
@@ -71,13 +76,17 @@ public struct FTS3Pattern: Sendable {
     /// ```
     ///
     /// - parameter string: The string to turn into an FTS3 pattern.
-    public init?(matchingAnyTokenIn string: String) {
-        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple),
+    public init?<API: SQLiteAPI>(
+        matchingAnyTokenIn string: String,
+        api: API.Type
+    ) {
+        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple, api: api),
               !tokens.isEmpty
         else { return nil }
-        try? self.init(rawPattern: tokens.joined(separator: " OR "))
+        try? self.init(rawPattern: tokens.joined(separator: " OR "), api: api)
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a pattern that matches all tokens found in the input string.
     ///
     /// The result is nil if no pattern could be built.
@@ -90,13 +99,17 @@ public struct FTS3Pattern: Sendable {
     /// ```
     ///
     /// - parameter string: The string to turn into an FTS3 pattern.
-    public init?(matchingAllTokensIn string: String) {
-        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple),
+    public init?<API: SQLiteAPI>(
+        matchingAllTokensIn string: String,
+        api: API.Type
+    ) {
+        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple, api: api),
               !tokens.isEmpty
         else { return nil }
-        try? self.init(rawPattern: tokens.joined(separator: " "))
+        try? self.init(rawPattern: tokens.joined(separator: " "), api: api)
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a pattern that matches all token prefixes found in the input
     /// string.
     ///
@@ -110,13 +123,17 @@ public struct FTS3Pattern: Sendable {
     /// ```
     ///
     /// - parameter string: The string to turn into an FTS3 pattern.
-    public init?(matchingAllPrefixesIn string: String) {
-        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple),
+    public init?<API: SQLiteAPI>(
+        matchingAllPrefixesIn string: String,
+        api: API.Type
+    ) {
+        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple, api: api),
               !tokens.isEmpty
         else { return nil }
-        try? self.init(rawPattern: tokens.map { "\($0)*" }.joined(separator: " "))
+        try? self.init(rawPattern: tokens.map { "\($0)*" }.joined(separator: " "), api: api)
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a pattern that matches a contiguous string.
     ///
     /// The result is nil if no pattern could be built.
@@ -129,11 +146,14 @@ public struct FTS3Pattern: Sendable {
     /// ```
     ///
     /// - parameter string: The string to turn into an FTS3 pattern.
-    public init?(matchingPhrase string: String) {
-        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple),
+    public init?<API: SQLiteAPI>(
+        matchingPhrase string: String,
+        api: API.Type
+    ) {
+        guard let tokens = try? FTS3.tokenize(string, withTokenizer: .simple, api: api),
               !tokens.isEmpty
         else { return nil }
-        try? self.init(rawPattern: "\"" + tokens.joined(separator: " ") + "\"")
+        try? self.init(rawPattern: "\"" + tokens.joined(separator: " ") + "\"", api: api)
     }
 }
 

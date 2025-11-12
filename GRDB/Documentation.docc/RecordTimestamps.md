@@ -69,7 +69,7 @@ On insertion, the `Player` record should get fresh `creationDate` and `modificat
 extension Player: Encodable, MutablePersistableRecord {
     /// Sets both `creationDate` and `modificationDate` to the
     /// transaction date, if they are not set yet.
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if creationDate == nil {
             creationDate = try db.transactionDate
         }
@@ -182,7 +182,7 @@ extension Player: Encodable, MutablePersistableRecord {
     
     /// Sets both `creationDate` and `modificationDate` to the
     /// transaction date, if they are not set yet.
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if creationDate == nil {
             creationDate = try db.transactionDate
         }
@@ -311,7 +311,7 @@ You can copy it in your application, or use it as an inspiration. Not all apps h
     extension Player {
         /// If the player has a non-nil primary key and a matching row in
         /// the database, the player is updated. Otherwise, it is inserted.
-        mutating func saveWithTimestamp(_ db: Database) throws {
+        mutating func saveWithTimestamp(_ db: DatabaseBase<some SQLiteAPI>) throws {
             // Test the presence of id first, so that we don't perform an
             // update that would surely throw RecordError.recordNotFound.
             if id == nil {
@@ -346,7 +346,7 @@ extension TimestampedRecord {
     /// `TimestampedRecord` types that customize the `willInsert`
     /// persistence callback should call `initializeTimestamps` from
     /// their implementation.
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try initializeTimestamps(db)
     }
     
@@ -356,7 +356,7 @@ extension TimestampedRecord {
     /// It is called automatically before insertion, if your type does not
     /// customize the `willInsert` persistence callback. If you customize
     /// this callback, call `initializeTimestamps` from your implementation.
-    mutating func initializeTimestamps(_ db: Database) throws {
+    mutating func initializeTimestamps(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if creationDate == nil {
             creationDate = try db.transactionDate
         }
@@ -370,7 +370,7 @@ extension TimestampedRecord {
     ///
     /// - parameter modificationDate: The modification date. If nil, the
     ///   transaction date is used.
-    mutating func updateWithTimestamp(_ db: Database, modificationDate: Date? = nil) throws {
+    mutating func updateWithTimestamp(_ db: DatabaseBase<some SQLiteAPI>, modificationDate: Date? = nil) throws {
         self.modificationDate = try modificationDate ?? db.transactionDate
         try update(db)
     }
@@ -403,7 +403,7 @@ extension TimestampedRecord {
     /// - returns: Whether the record was changed and updated.
     @discardableResult
     mutating func updateChangesWithTimestamp(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         modificationDate: Date? = nil,
         modify: (inout Self) -> Void)
     throws -> Bool
@@ -431,7 +431,7 @@ extension TimestampedRecord {
     ///
     /// - parameter modificationDate: The modification date. If nil, the
     ///   transaction date is used.
-    mutating func touch(_ db: Database, modificationDate: Date? = nil) throws {
+    mutating func touch(_ db: DatabaseBase<some SQLiteAPI>, modificationDate: Date? = nil) throws {
         try updateChanges(db) {
             $0.modificationDate = try modificationDate ?? db.transactionDate
         }

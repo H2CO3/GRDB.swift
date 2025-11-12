@@ -231,7 +231,7 @@ open class Record {
     /// your implementation.
     ///
     /// - parameter db: A database connection.
-    open func willInsert(_ db: Database) throws { }
+    open func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws { }
     
     /// Called around the record insertion.
     ///
@@ -242,7 +242,7 @@ open class Record {
     ///
     /// ```swift
     /// class Player: Record {
-    ///     func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    ///     func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
     ///         print("Player will insert")
     ///         try super.aroundInsert(db, insert: insert)
     ///         print("Player did insert")
@@ -253,7 +253,7 @@ open class Record {
     /// - parameter db: A database connection.
     /// - parameter insert: A function that inserts the record, and returns
     ///   information about the inserted row.
-    open func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    open func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         let inserted = try insert()
         resetDatabaseChanges(with: inserted.persistenceContainer)
     }
@@ -287,7 +287,7 @@ open class Record {
     ///
     /// - parameter db: A database connection.
     /// - parameter columns: The updated columns.
-    open func willUpdate(_ db: Database, columns: Set<String>) throws { }
+    open func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws { }
     
     /// Called around the record update.
     ///
@@ -299,7 +299,7 @@ open class Record {
     /// ```swift
     /// class Player: Record {
     ///     override func aroundUpdate(
-    ///         _ db: Database,
+    ///         _ db: DatabaseBase<some SQLiteAPI>,
     ///         columns: Set<String>,
     ///         update: () throws -> PersistenceSuccess)
     ///     throws
@@ -315,7 +315,7 @@ open class Record {
     /// - parameter columns: The updated columns.
     /// - parameter update: A function that updates the record. Its result is
     ///   reserved for GRDB usage.
-    open func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    open func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         let updated = try update()
         resetDatabaseChanges(with: updated.persistenceContainer)
     }
@@ -334,7 +334,7 @@ open class Record {
     /// your implementation.
     ///
     /// - parameter db: A database connection.
-    open func willSave(_ db: Database) throws { }
+    open func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws { }
     
     /// Called around the record update or insertion.
     ///
@@ -345,7 +345,7 @@ open class Record {
     ///
     /// ```swift
     /// class Player: Record {
-    ///     override func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    ///     override func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
     ///         print("Player will save")
     ///         try super.aroundSave(db, save: save)
     ///         print("Player did save")
@@ -356,7 +356,7 @@ open class Record {
     /// - parameter db: A database connection.
     /// - parameter save: A function that saves the recordsave: A function that saves the record. Its result is
     ///   reserved for GRDB usage.
-    open func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    open func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         _ = try save()
     }
     
@@ -374,7 +374,7 @@ open class Record {
     /// your implementation.
     ///
     /// - parameter db: A database connection.
-    open func willDelete(_ db: Database) throws { }
+    open func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws { }
     
     /// Called around the destruction of the record.
     ///
@@ -385,7 +385,7 @@ open class Record {
     ///
     /// ```swift
     /// class Player: Record {
-    ///     override func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    ///     override func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
     ///         print("Player will delete")
     ///         try super.aroundDelete(db, delete: delete)
     ///         print("Player did delete")
@@ -396,7 +396,7 @@ open class Record {
     /// - parameter db: A database connection.
     /// - parameter delete: A function that deletes the record and returns
     ///   whether a row was deleted in the database.
-    open func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    open func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         _ = try delete()
         setHasDatabaseChanges()
     }
@@ -423,7 +423,7 @@ open class Record {
     ///   if the primary key does not match any row in the database and record
     ///   could not be updated.
     @discardableResult
-    public final func updateChanges(_ db: Database) throws -> Bool {
+    public final func updateChanges(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool {
         let changedColumns = try Set(databaseChanges.keys)
         if changedColumns.isEmpty {
             return false

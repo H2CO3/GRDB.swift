@@ -1,4 +1,4 @@
-extension DatabaseReader {
+extension DatabaseReaderBase {
     /// Prints the results of all statements in the provided SQL.
     ///
     /// For example:

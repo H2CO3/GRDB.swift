@@ -52,7 +52,8 @@ import Dispatch
 /// ### Supporting Types
 ///
 /// - ``AnyDatabaseReader``
-public protocol DatabaseReader: AnyObject, Sendable {
+public protocol DatabaseReaderBase<API>: AnyObject, Sendable {
+    associatedtype API: SQLiteAPI
     
     /// The database configuration.
     var configuration: Configuration { get }
@@ -186,7 +187,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     /// - throws: The error thrown by `value`, or any ``DatabaseError`` that
     ///   would happen while establishing the database access.
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    func read<T>(_ value: (Database) throws -> T) throws -> T
+    func read<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T
     
     /// Executes read-only database operations, and returns their result after
     /// they have finished executing.
@@ -215,7 +216,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ///   database access, or the error thrown by `value`, or
     ///   `CancellationError` if the task is cancelled.
     func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T
     
     /// Schedules read-only database operations for execution, and
@@ -245,7 +246,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ///   is a `Result` that provides the database connection, or the failure
     ///   that would prevent establishing the read access to the database.
     func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     )
     
     /// Executes database operations, and returns their result after they have
@@ -284,7 +285,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     /// - throws: The error thrown by `value`, or any ``DatabaseError`` that
     ///   would happen while establishing the database access.
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    func unsafeRead<T>(_ value: (Database) throws -> T) throws -> T
+    func unsafeRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T
     
     /// Executes database operations, and returns their result after they have
     /// finished executing.
@@ -319,7 +320,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ///   database access, or the error thrown by `value`, or
     ///   `CancellationError` if the task is cancelled.
     func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T
     
     /// Schedules database operations for execution, and returns immediately.
@@ -354,7 +355,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ///   is a `Result` that provides the database connection, or the failure
     ///   that would prevent establishing the read access to the database.
     func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     )
     
     /// Executes database operations, and returns their result after they have
@@ -398,7 +399,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     /// - parameter value: A closure which accesses the database.
     /// - throws: The error thrown by `value`, or any ``DatabaseError`` that
     ///   would happen while establishing the database access.
-    func unsafeReentrantRead<T>(_ value: (Database) throws -> T) throws -> T
+    func unsafeReentrantRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T
     
     
     // MARK: - Value Observation
@@ -417,7 +418,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ) -> AnyDatabaseCancellable
 }
 
-extension DatabaseReader {
+extension DatabaseReaderBase {
     
     // MARK: - Backup
     
@@ -499,7 +500,7 @@ extension DatabaseReader {
 }
 
 #if canImport(Combine)
-extension DatabaseReader {
+extension DatabaseReaderBase {
     // MARK: - Publishing Database Values
     
     /// Returns a publisher that publishes one value and completes.
@@ -531,7 +532,7 @@ extension DatabaseReader {
     /// - parameter value: A closure which accesses the database.
     public func readPublisher<Output>(
         receiveOn scheduler: some Combine.Scheduler = DispatchQueue.main,
-        value: @escaping @Sendable (Database) throws -> Output
+        value: @escaping @Sendable (DatabaseBase<API>) throws -> Output
     ) -> DatabasePublishers.Read<Output> {
         OnDemandFuture { fulfill in
             self.asyncRead { dbResult in
@@ -568,7 +569,7 @@ extension Publisher where Failure == Error {
 }
 #endif
 
-extension DatabaseReader {
+extension DatabaseReaderBase {
     // MARK: - Value Observation Support
     
     /// Adding an observation in a read-only database emits only the
@@ -619,17 +620,17 @@ extension DatabaseReader {
 ///
 /// An instance of `AnyDatabaseReader` forwards its operations to an underlying
 /// base database reader.
-public final class AnyDatabaseReader {
-    private let base: any DatabaseReader
+public final class AnyDatabaseReaderBase<API: SQLiteAPI> {
+    private let base: any DatabaseReader<API>
     
     /// Creates a new database reader that wraps and forwards operations
     /// to `base`.
-    public init(_ base: any DatabaseReader) {
+    public init(_ base: any DatabaseReader<API>) {
         self.base = base
     }
 }
 
-extension AnyDatabaseReader: DatabaseReader {
+extension AnyDatabaseReaderBase: DatabaseReaderBase {
     public var configuration: Configuration {
         base.configuration
     }
@@ -647,40 +648,40 @@ extension AnyDatabaseReader: DatabaseReader {
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func read<T>(_ value: (Database) throws -> T) throws -> T {
+    public func read<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.read(value)
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await base.read(value)
     }
     
     public func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         base.asyncRead(value)
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func unsafeRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.unsafeRead(value)
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await base.unsafeRead(value)
     }
     
     public func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         base.asyncUnsafeRead(value)
     }
     
-    public func unsafeReentrantRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeReentrantRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.unsafeReentrantRead(value)
     }
     
@@ -735,20 +736,20 @@ extension DatabaseSnapshotReader {
     /// - parameter value: A closure which accesses the database.
     /// - throws: The error thrown by `value`, or any ``DatabaseError`` that
     ///   would happen while establishing the database access.
-    public func reentrantRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func reentrantRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         // Reentrant reads are safe in a snapshot
         try unsafeReentrantRead(value)
     }
     
     // There is no such thing as an unsafe access to a snapshot.
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func unsafeRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try read(value)
     }
     
     // There is no such thing as an unsafe access to a snapshot.
     public func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         asyncRead(value)
     }

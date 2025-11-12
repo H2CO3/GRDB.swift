@@ -19,13 +19,16 @@ import Foundation
 ///
 /// **Notify** is calling user callbacks, in case of database change or error.
 final class ValueWriteOnlyObserver<Writer, Reducer, Scheduler>: @unchecked Sendable
-where Writer: DatabaseWriter,
+where Writer: DatabaseWriterBase,
       Reducer: ValueReducer,
-      Scheduler: ValueObservationScheduler
+      Scheduler: ValueObservationScheduler,
+      Writer.API == Reducer.API
 {
     // MARK: - Configuration
     //
     // Configuration is not mutable.
+    
+    typealias API = Writer.API
     
     /// How to schedule observed values and errors.
     private let scheduler: Scheduler
@@ -92,13 +95,13 @@ where Writer: DatabaseWriter,
             self.fetcher = fetcher
         }
         
-        func fetch(_ db: Database) throws -> Reducer.Fetcher.Value {
+        func fetch(_ db: DatabaseBase<API>) throws -> Reducer.Fetcher.Value {
             try db.isolated(readOnly: readOnly) {
                 try fetcher.fetch(db)
             }
         }
         
-        func fetchRecordingObservedRegion(_ db: Database) throws -> (Reducer.Fetcher.Value, DatabaseRegion) {
+        func fetchRecordingObservedRegion(_ db: DatabaseBase<API>) throws -> (Reducer.Fetcher.Value, DatabaseRegion) {
             var region = DatabaseRegion()
             let fetchedValue = try db.isolated(readOnly: readOnly) {
                 try db.recordingSelection(&region) {
@@ -303,7 +306,7 @@ extension ValueWriteOnlyObserver {
     /// By grouping the initial fetch and the beginning of observation in a
     /// single database access, we are sure that no concurrent write can happen
     /// during the initial fetch, and that we won't miss any future change.
-    private func fetchAndStartObservation(_ db: Database) throws -> Reducer.Fetcher.Value? {
+    private func fetchAndStartObservation(_ db: DatabaseBase<API>) throws -> Reducer.Fetcher.Value? {
         let (events, databaseAccess) = lock.synchronized {
             (notificationCallbacks?.events, self.databaseAccess)
         }
@@ -329,7 +332,7 @@ extension ValueWriteOnlyObserver {
         }
     }
     
-    private func startObservation(_ db: Database, observedRegion: DatabaseRegion) {
+    private func startObservation(_ db: DatabaseBase<API>, observedRegion: DatabaseRegion) {
         observationState.region = observedRegion
         assert(observationState.isModified == false)
         db.add(transactionObserver: self, extent: .observerLifetime)
@@ -338,7 +341,7 @@ extension ValueWriteOnlyObserver {
 
 // MARK: - Observing Database Transactions
 
-extension ValueWriteOnlyObserver: TransactionObserver {
+extension ValueWriteOnlyObserver: TransactionObserverBase {
     func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool {
         if let region = observationState.region {
             return region.isModified(byEventsOfKind: eventKind)
@@ -363,7 +366,7 @@ extension ValueWriteOnlyObserver: TransactionObserver {
         }
     }
     
-    func databaseDidCommit(_ db: Database) {
+    func databaseDidCommit(_ db: DatabaseBase<API>) {
         // Ignore transaction unless database was modified
         guard observationState.isModified else { return }
         
@@ -438,7 +441,7 @@ extension ValueWriteOnlyObserver: TransactionObserver {
         }
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<API>) {
         // Reset the isModified flag until next transaction
         observationState.isModified = false
     }
@@ -481,7 +484,7 @@ extension ValueWriteOnlyObserver: DatabaseCancellable {
         }
     }
     
-    private func stopDatabaseObservation(_ db: Database) {
+    private func stopDatabaseObservation(_ db: DatabaseBase<API>) {
         db.remove(transactionObserver: self)
         observationState = .notObserving
         lock.synchronized {

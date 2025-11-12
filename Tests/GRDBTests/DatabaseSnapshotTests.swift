@@ -10,11 +10,11 @@ class DatabaseSnapshotTests: GRDBTestCase {
             }
         }
         
-        func increment(_ db: Database) throws {
+        func increment(_ db: DatabaseBase<some SQLiteAPI>) throws {
             try db.execute(sql: "INSERT INTO counter DEFAULT VALUES")
         }
         
-        func value(_ db: Database) throws -> Int {
+        func value(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
             try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM counter")!
         }
     }
@@ -83,10 +83,10 @@ class DatabaseSnapshotTests: GRDBTestCase {
             
             func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool { false }
             func databaseDidChange(with event: DatabaseEvent) { }
-            func databaseDidCommit(_ db: Database) {
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
                 snapshot = try! dbPool.makeSnapshot()
             }
-            func databaseDidRollback(_ db: Database) { }
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { }
         }
         let dbPool = try makeDatabasePool()
         let counter = try Counter(dbPool: dbPool)

@@ -168,7 +168,7 @@ class AssociationHasOneThroughSQLTests: GRDBTestCase {
     }
     
     private func testHasOneWithTwoSteps<BAssociation, CAssociation>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         ab: BAssociation,
         ac: CAssociation,
         bCondition: String,
@@ -867,7 +867,7 @@ class AssociationHasOneThroughSQLTests: GRDBTestCase {
     }
     
     private func testHasOneWithThreeSteps<BAssociation, CAssociation, DCAssociation, DBAssociation>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         b: BAssociation,
         c: CAssociation,
         dThroughC: DCAssociation,

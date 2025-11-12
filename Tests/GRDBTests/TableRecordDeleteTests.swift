@@ -50,7 +50,7 @@ private struct CitizenshipView : TableRecord {
 // Schema source
 
 private struct ViewSchemaSource: DatabaseSchemaSource {
-    func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+    func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
         switch view.name {
         case "personsView":
             return ["id"]

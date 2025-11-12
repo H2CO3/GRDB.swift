@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
@@ -162,7 +162,7 @@ public struct DatabaseValue: Hashable {
     }
     
     /// Creates a `DatabaseValue` initialized from a raw SQLite statement pointer.
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
+    public init(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) {
         switch sqlite3_column_type(sqliteStatement, index) {
         case SQLITE_NULL:
             storage = .null
@@ -187,7 +187,7 @@ public struct DatabaseValue: Hashable {
 }
 
 extension DatabaseValue: StatementBinding {
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
         switch storage {
         case .null:
             return sqlite3_bind_null(sqliteStatement, index)

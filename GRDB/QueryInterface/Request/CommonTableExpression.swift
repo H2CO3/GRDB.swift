@@ -333,7 +333,7 @@ struct SQLCTE {
     var isRecursive: Bool
     
     /// The number of columns in the common table expression.
-    func columnCount(_ db: Database) throws -> Int {
+    func columnCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         if let columns {
             // No need to hit the database
             return columns.count

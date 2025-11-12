@@ -51,7 +51,7 @@ public protocol VirtualTableModule {
     
     /// Execute any relevant database statement after the virtual table has
     /// been created.
-    func database(_ db: Database, didCreate tableName: String, using definition: TableDefinition) throws
+    func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: TableDefinition) throws
 }
 
 // TODO: Question the existence of this API. VirtualTableConfiguration was
@@ -79,7 +79,7 @@ public struct VirtualTableOptions: OptionSet, Sendable {
     public static let temporary = VirtualTableOptions(rawValue: 1 << 1)
 }
 
-extension Database {
+extension DatabaseBase {
     
     // MARK: - Database Schema
     

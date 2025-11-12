@@ -141,7 +141,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// Default implementation does nothing.
     ///
     /// - parameter db: A database connection.
-    mutating func willInsert(_ db: Database) throws
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws
     
     /// Persistence callback called around the record insertion.
     ///
@@ -153,7 +153,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     ///
     /// ```swift
     /// struct Player: MutablePersistableRecord {
-    ///     func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    ///     func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
     ///         print("Player will insert")
     ///         _ = try insert()
     ///         print("Player did insert")
@@ -164,7 +164,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// - parameter db: A database connection.
     /// - parameter insert: A function that inserts the record, and returns
     ///   information about the inserted row.
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws
     
     /// Persistence callback called upon successful insertion.
     ///
@@ -200,7 +200,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     ///
     /// - parameter db: A database connection.
     /// - parameter columns: The updated columns.
-    func willUpdate(_ db: Database, columns: Set<String>) throws
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws
     
     /// Persistence callback called around the record update.
     ///
@@ -212,7 +212,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     ///
     /// ```swift
     /// struct Player: MutablePersistableRecord {
-    ///     func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    ///     func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
     ///         print("Player will update")
     ///         _ = try update()
     ///         print("Player did update")
@@ -223,7 +223,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// - parameter columns: The updated columns.
     /// - parameter update: A function that updates the record. Its result is
     ///   reserved for GRDB usage.
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws
     
     /// Persistence callback called upon successful update.
     ///
@@ -239,7 +239,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// Default implementation does nothing.
     ///
     /// - parameter db: A database connection.
-    func willSave(_ db: Database) throws
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws
     
     /// Persistence callback called around the record update or insertion.
     ///
@@ -251,7 +251,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     ///
     /// ```swift
     /// struct Player: MutablePersistableRecord {
-    ///     func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    ///     func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
     ///         print("Player will save")
     ///         _ = try save()
     ///         print("Player did save")
@@ -262,7 +262,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// - parameter db: A database connection.
     /// - parameter save: A function that saves the record. Its result is
     ///   reserved for GRDB usage.
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws
     
     /// Persistence callback called upon successful update or insertion.
     ///
@@ -278,7 +278,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// Default implementation does nothing.
     ///
     /// - parameter db: A database connection.
-    func willDelete(_ db: Database) throws
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws
     
     /// Persistence callback called around the destruction of the record.
     ///
@@ -290,7 +290,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     ///
     /// ```swift
     /// struct Player: MutablePersistableRecord {
-    ///     func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    ///     func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
     ///         print("Player will delete")
     ///         _ = try delete()
     ///         print("Player did delete")
@@ -301,7 +301,7 @@ public protocol MutablePersistableRecord: EncodableRecord, TableRecord {
     /// - parameter db: A database connection.
     /// - parameter delete: A function that deletes the record and returns
     ///   whether a row was deleted in the database.
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws
     
     /// Persistence callback called upon successful deletion.
     ///
@@ -340,7 +340,7 @@ extension MutablePersistableRecord {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func exists(_ db: Database) throws -> Bool {
+    public func exists(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool {
         guard let statement = try DAO(db, self).existsStatement() else {
             // Nil primary key
             return false
@@ -357,13 +357,13 @@ extension MutablePersistableRecord {
 /// See <https://www.sqlite.org/lang_conflict.html>
 public struct PersistenceConflictPolicy: Sendable {
     /// The conflict resolution algorithm for insertions
-    public let conflictResolutionForInsert: Database.ConflictResolution
+    public let conflictResolutionForInsert: DatabaseConflictResolution
     
     /// The conflict resolution algorithm for updates
-    public let conflictResolutionForUpdate: Database.ConflictResolution
+    public let conflictResolutionForUpdate: DatabaseConflictResolution
     
     /// Creates a policy
-    public init(insert: Database.ConflictResolution = .abort, update: Database.ConflictResolution = .abort) {
+    public init(insert: DatabaseConflictResolution = .abort, update: DatabaseConflictResolution = .abort) {
         self.conflictResolutionForInsert = insert
         self.conflictResolutionForUpdate = update
     }

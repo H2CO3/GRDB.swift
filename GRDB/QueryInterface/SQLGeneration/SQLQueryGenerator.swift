@@ -91,14 +91,14 @@ struct SQLQueryGenerator: Refinable {
         return sql
     }
     
-    func makePreparedRequest(_ db: Database) throws -> PreparedRequest {
-        try PreparedRequest(
+    func makePreparedRequest<API>(_ db: DatabaseBase<API>) throws -> PreparedRequestBase<API> {
+        try PreparedRequestBase(
             statement: makeStatement(db),
             adapter: rowAdapter(SQLGenerationContext(db, ctes: relation.ctes)))
     }
     
     /// The number of fetched columns.
-    func columnCount(_ db: Database) throws -> Int {
+    func columnCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try relation
             .selectionPromise
             .resolve(db)
@@ -106,7 +106,7 @@ struct SQLQueryGenerator: Refinable {
     }
     
     /// Returns a prepared statement
-    func makeStatement(_ db: Database) throws -> Statement {
+    func makeStatement<API>(_ db: DatabaseBase<API>) throws -> StatementBase<API> {
         // Build
         let context = SQLGenerationContext(db)
         let sql = try requestSQL(context)
@@ -149,7 +149,7 @@ struct SQLQueryGenerator: Refinable {
     ///
     /// The optimized region allows us to track individual rowids, and also
     /// discard some provably empty requests such as `Player.none()`.
-    private func optimizedSelectedRegion(_ db: Database, _ selectedRegion: DatabaseRegion) throws -> DatabaseRegion {
+    private func optimizedSelectedRegion(_ db: DatabaseBase<some SQLiteAPI>, _ selectedRegion: DatabaseRegion) throws -> DatabaseRegion {
         var optimizedRegion = selectedRegion
         
         // Give up unless request feeds from a database table
@@ -175,7 +175,7 @@ struct SQLQueryGenerator: Refinable {
     /// If true, executing this query yields at most one row.
     /// If false, we don't know how many rows this query returns.
     private func expectsSingleResult(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         selection: [SQLSelection],
         filter: SQLExpression?,
         groupExpressions: [SQLExpression])
@@ -207,7 +207,7 @@ struct SQLQueryGenerator: Refinable {
     
     /// Returns a `DELETE` statement, with `RETURNING` clause if `selection`
     /// is not empty.
-    func makeDeleteStatement(_ db: Database, selection: [any SQLSelectable] = []) throws -> Statement {
+    func makeDeleteStatement(_ db: DatabaseBase<some SQLiteAPI>, selection: [any SQLSelectable] = []) throws -> Statement {
         switch try grouping(db) {
         case .none:
             guard relation.joins.isEmpty else {
@@ -252,7 +252,7 @@ struct SQLQueryGenerator: Refinable {
     
     /// DELETE FROM table WHERE id IN (SELECT id FROM table ...)
     /// DELETE FROM table WHERE id IN (SELECT id FROM table ...) RETURNING ...
-    private func makeTrivialDeleteStatement(_ db: Database, selection: [any SQLSelectable]) throws -> Statement {
+    private func makeTrivialDeleteStatement(_ db: DatabaseBase<some SQLiteAPI>, selection: [any SQLSelectable]) throws -> Statement {
         let tableName = relation.source.tableName
         let alias = TableAlias(tableName: tableName)
         let context = SQLGenerationContext(db, aliases: [alias])
@@ -280,8 +280,8 @@ struct SQLQueryGenerator: Refinable {
     ///
     /// Returns nil if assignments is empty.
     func makeUpdateStatement(
-        _ db: Database,
-        conflictResolution: Database.ConflictResolution,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        conflictResolution: DatabaseConflictResolution,
         assignments: [ColumnAssignment],
         selection: [any SQLSelectable] = [])
     throws -> Statement?
@@ -354,8 +354,8 @@ struct SQLQueryGenerator: Refinable {
     /// UPDATE table SET ... WHERE id IN (SELECT id FROM table ...) RETURNING ...
     /// Returns nil if assignments is empty
     private func makeTrivialUpdateStatement(
-        _ db: Database,
-        conflictResolution: Database.ConflictResolution,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        conflictResolution: DatabaseConflictResolution,
         assignments: [ColumnAssignment],
         selection: [any SQLSelectable])
     throws -> Statement?
@@ -401,7 +401,7 @@ struct SQLQueryGenerator: Refinable {
     
     // Support for the RETURNING clause
     private func makeStatement(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments,
         returning selection: [any SQLSelectable],
@@ -471,7 +471,7 @@ struct SQLQueryGenerator: Refinable {
     }
     
     /// Informs about the query grouping
-    private func grouping(_ db: Database) throws -> GroupingInfo {
+    private func grouping(_ db: DatabaseBase<some SQLiteAPI>) throws -> GroupingInfo {
         // Empty group clause: no grouping
         // SELECT * FROM player
         guard let groupExpressions = try relation.groupPromise?.resolve(db), groupExpressions.isEmpty == false else {

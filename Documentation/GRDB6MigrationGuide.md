@@ -178,12 +178,12 @@ The record protocols have been refactored. We tried to keep the amount of modifi
     
     ```swift
     // GRDB 6: remove those methods from your code
-    func insert(_ db: Database) throws
+    func insert(_ db: DatabaseBase<some SQLiteAPI>) throws
     func didInsert(with rowID: Int64, for column: String?)
-    func update(_ db: Database, columns: Set<String>) throws
-    func save(_ db: Database) throws
-    func delete(_ db: Database) throws -> Bool
-    func exists(_ db: Database) throws -> Bool
+    func update(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws
+    func save(_ db: DatabaseBase<some SQLiteAPI>) throws
+    func delete(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
+    func exists(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool
     ```
     
     - `insert(_:)`: customization is now made with [persistence callbacks].
@@ -204,12 +204,12 @@ The record protocols have been refactored. We tried to keep the amount of modifi
     struct Link: PersistableRecord {
         var url: URL
         
-        func insert(_ db: Database) throws {
+        func insert(_ db: DatabaseBase<some SQLiteAPI>) throws {
             try validate()
             try performInsert(db)
         }
         
-        func update(_ db: Database, columns: Set<String>) throws {
+        func update(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
             try validate()
             try performUpdate(db, columns: columns)
         }
@@ -229,7 +229,7 @@ The record protocols have been refactored. We tried to keep the amount of modifi
     struct Link: PersistableRecord {
         var url: URL
         
-        func willSave(_ db: Database) throws {
+        func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
             if url.host == nil {
                 throw ValidationError("url must be absolute.")
             }
@@ -249,7 +249,7 @@ The record protocols have been refactored. We tried to keep the amount of modifi
     class Link: Record {
         var url: URL
         
-        override func willSave(_ db: Database) throws {
+        override func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
             try super.willSave(db)
             if url.host == nil {
                 throw ValidationError("url must be absolute.")

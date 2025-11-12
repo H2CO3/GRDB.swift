@@ -275,8 +275,8 @@ class ColumnInfoTests: GRDBTestCase {
         class Observer: TransactionObserver {
             func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool { true }
             func databaseDidChange(with event: DatabaseEvent) { }
-            func databaseDidCommit(_ db: Database) { }
-            func databaseDidRollback(_ db: Database) { }
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) { }
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { }
         }
         let dbQueue = try makeDatabaseQueue()
         dbQueue.add(transactionObserver: Observer(), extent: .databaseLifetime)

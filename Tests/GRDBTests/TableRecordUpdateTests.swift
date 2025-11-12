@@ -14,7 +14,7 @@ private struct Player: Codable, Identifiable, PersistableRecord, FetchableRecord
         static let bonus = Column(CodingKeys.bonus)
     }
     
-    static func createTable(_ db: Database) throws {
+    static func createTable(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.create(table: "player") { t in
             t.autoIncrementedPrimaryKey("id")
             t.column("name", .text)
@@ -37,7 +37,7 @@ private struct PlayerView: Codable, Identifiable, PersistableRecord, FetchableRe
         static let bonus = Column(CodingKeys.bonus)
     }
     
-    static func createTable(_ db: Database) throws {
+    static func createTable(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.execute(sql: """
             CREATE VIEW playerView AS SELECT * FROM player;
             -- Insert trigger
@@ -59,7 +59,7 @@ private struct PlayerView: Codable, Identifiable, PersistableRecord, FetchableRe
 }
 
 private struct ViewSchemaSource: DatabaseSchemaSource {
-    func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+    func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
         ["id"]
     }
 }
@@ -67,7 +67,7 @@ private struct ViewSchemaSource: DatabaseSchemaSource {
 private typealias Columns = Player.Columns
 
 private extension QueryInterfaceRequest<Player> {
-    func incrementScore(_ db: Database) throws {
+    func incrementScore(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try updateAll(db) { $0.score += 1 }
     }
 }

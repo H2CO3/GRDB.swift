@@ -50,7 +50,7 @@ public protocol PersistableRecord: MutablePersistableRecord {
     ///
     /// - note: If you need a mutating variant of this method, adopt the
     ///   ``MutablePersistableRecord`` protocol instead.
-    func willInsert(_ db: Database) throws
+    func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws
     
     /// Persistence callback called upon successful insertion.
     ///

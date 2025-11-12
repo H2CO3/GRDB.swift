@@ -78,14 +78,14 @@ public final class TableDefinition {
             case foreignKeyDefinition(ForeignKeyDefinition)
         }
         var components: [Component]
-        var conflictResolution: Database.ConflictResolution?
+        var conflictResolution: DatabaseConflictResolution?
         
-        init(components: [Component], conflictResolution: Database.ConflictResolution?) {
+        init(components: [Component], conflictResolution: DatabaseConflictResolution?) {
             self.components = components
             self.conflictResolution = conflictResolution
         }
         
-        init(columns: [String], conflictResolution: Database.ConflictResolution?) {
+        init(columns: [String], conflictResolution: DatabaseConflictResolution?) {
             let components = columns.map { name in
                 Component.columnName(name)
             }
@@ -143,7 +143,7 @@ public final class TableDefinition {
     @discardableResult
     public func autoIncrementedPrimaryKey(
         _ name: String,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     -> ColumnDefinition
     {
         column(name, .integer).primaryKey(onConflict: conflictResolution, autoincrement: true)
@@ -172,7 +172,7 @@ public final class TableDefinition {
     public func primaryKey(
         _ name: String,
         _ type: Database.ColumnType,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     -> ColumnDefinition
     {
         let pk = column(name, type).primaryKey(onConflict: conflictResolution)
@@ -208,7 +208,7 @@ public final class TableDefinition {
     ///
     /// A NOT NULL constraint is always added to the wrapped primary key columns.
     public func primaryKey(
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         body: () throws -> Void)
     rethrows
     {
@@ -318,7 +318,7 @@ public final class TableDefinition {
     /// - parameter columns: The primary key columns.
     /// - parameter conflictResolution: An optional conflict resolution
     ///   (see <https://www.sqlite.org/lang_conflict.html>).
-    public func primaryKey(_ columns: [String], onConflict conflictResolution: Database.ConflictResolution? = nil) {
+    public func primaryKey(_ columns: [String], onConflict conflictResolution: DatabaseConflictResolution? = nil) {
         guard primaryKeyConstraint == nil else {
             // Programmer error
             fatalError("can't define several primary keys")
@@ -360,7 +360,7 @@ public final class TableDefinition {
     /// - parameter columns: The unique key columns.
     /// - parameter conflictResolution: An optional conflict resolution
     ///   (see <https://www.sqlite.org/lang_conflict.html>).
-    public func uniqueKey(_ columns: [String], onConflict conflictResolution: Database.ConflictResolution? = nil) {
+    public func uniqueKey(_ columns: [String], onConflict conflictResolution: DatabaseConflictResolution? = nil) {
         uniqueKeyConstraints.append(KeyConstraint(columns: columns, conflictResolution: conflictResolution))
     }
     

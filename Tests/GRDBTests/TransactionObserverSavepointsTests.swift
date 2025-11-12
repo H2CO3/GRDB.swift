@@ -18,12 +18,12 @@ private class Observer : TransactionObserver {
         events.append(event.copy())
     }
     
-    func databaseDidCommit(_ db: Database) {
+    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
         lastCommittedEvents = events
         events = []
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
         lastCommittedEvents = []
         events = []
     }

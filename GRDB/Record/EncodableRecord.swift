@@ -402,7 +402,7 @@ public struct PersistenceContainer: Sendable {
     
     /// Convenience initializer from a database connection and a record
     @usableFromInline
-    init(_ db: Database, _ record: some EncodableRecord & TableRecord) throws {
+    init(_ db: DatabaseBase<some SQLiteAPI>, _ record: some EncodableRecord & TableRecord) throws {
         let databaseTableName = type(of: record).databaseTableName
         let columnCount = try db.columns(in: databaseTableName).count
         self.init(minimumCapacity: columnCount) // Optimization

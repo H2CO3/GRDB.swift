@@ -11,9 +11,11 @@
 // which is its `Fetcher`.
 
 /// Implementation details of `ValueReducer`.
-public protocol _ValueReducer: GRDBSendableMetatype {
+public protocol _ValueReducer<API>: GRDBSendableMetatype {
+    associatedtype API: SQLiteAPI
+    
     /// The Sendable type that fetches database values
-    associatedtype Fetcher: _ValueReducerFetcher
+    associatedtype Fetcher: _ValueReducerFetcher<API>
     
     /// The type of observed values
     associatedtype Value: Sendable
@@ -38,11 +40,13 @@ public protocol _ValueReducer: GRDBSendableMetatype {
     mutating func _value(_ fetched: Fetcher.Value) throws -> Value?
 }
 
-public protocol _ValueReducerFetcher: Sendable {
+public protocol _ValueReducerFetcher<API>: Sendable {
+    associatedtype API: SQLiteAPI
+    
     /// The type of fetched database values
     associatedtype Value
     
-    func fetch(_ db: Database) throws -> Value
+    func fetch(_ db: DatabaseBase<API>) throws -> Value
 }
 
 /// `ValueReducer` supports ``ValueObservation``.

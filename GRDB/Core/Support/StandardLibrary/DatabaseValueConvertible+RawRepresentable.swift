@@ -20,7 +20,7 @@ extension SQLExpressible where Self: RawRepresentable, Self.RawValue: SQLExpress
 }
 
 extension StatementBinding where Self: RawRepresentable, Self.RawValue: StatementBinding {
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
+    public func bind(to sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, at index: CInt) -> CInt {
         rawValue.bind(to: sqliteStatement, at: index)
     }
 }
@@ -41,7 +41,7 @@ extension StatementBinding where Self: RawRepresentable, Self.RawValue: Statemen
 extension StatementColumnConvertible where Self: RawRepresentable, Self.RawValue: StatementColumnConvertible {
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
+    public init?(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) {
         guard let rawValue = RawValue(sqliteStatement: sqliteStatement, index: index) else {
             return nil
         }

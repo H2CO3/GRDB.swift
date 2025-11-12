@@ -7,14 +7,14 @@
 ///   and columns.
 ///
 /// - It gathers SQL arguments in order to prevent SQL injection.
-final class SQLGenerationContext {
+final class SQLGenerationContext<API: SQLiteAPI> {
     private enum Parent {
-        case none(db: Database, argumentsSink: StatementArgumentsSink)
+        case none(db: DatabaseBase<API>, argumentsSink: StatementArgumentsSink)
         case context(SQLGenerationContext)
     }
     
     /// A database connection.
-    var db: Database {
+    var db: DatabaseBase<API> {
         switch parent {
         case let .none(db: db, argumentsSink: _): return db
         case let .context(context): return context.db
@@ -48,7 +48,7 @@ final class SQLGenerationContext {
     /// - parameter aliases: An array of table aliases to disambiguate.
     /// - parameter ctes: An dictionary of available CTEs.
     init(
-        _ db: Database,
+        _ db: DatabaseBase<API>,
         argumentsSink: StatementArgumentsSink = StatementArgumentsSink(),
         aliases: [TableAliasBase] = [],
         ctes: OrderedDictionary<String, SQLCTE> = [:])

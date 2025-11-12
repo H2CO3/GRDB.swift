@@ -66,6 +66,7 @@ public struct FTS3 {
     /// See ``Database/create(virtualTable:options:using:_:)``
     public init() { }
     
+    #warning("TODO: expose a version with default api")
     /// Returns an array of tokens found in the string argument.
     ///
     /// For example:
@@ -94,12 +95,13 @@ public struct FTS3 {
     /// - <https://www.sqlite.org/fts3.html#querying_tokenizers>
     ///
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func tokenize(
+    public static func tokenize<API: SQLiteAPI>(
         _ string: String,
-        withTokenizer tokenizer: FTS3TokenizerDescriptor = .simple)
+        withTokenizer tokenizer: FTS3TokenizerDescriptor = .simple,
+        api: API.Type)
     throws -> [String]
     {
-        try DatabaseQueue().inDatabase { db in
+        try DatabaseQueueBase<API>().inDatabase { db in
             var tokenizerChunks: [String] = []
             tokenizerChunks.append(tokenizer.name)
             for option in tokenizer.arguments {
@@ -121,7 +123,7 @@ extension FTS3: VirtualTableModule {
         FTS3TableDefinition()
     }
     
-    public func moduleArguments(for definition: FTS3TableDefinition, in db: Database) -> [String] {
+    public func moduleArguments(for definition: FTS3TableDefinition, in db: DatabaseBase<some SQLiteAPI>) -> [String] {
         var arguments = definition.columns
         if let tokenizer = definition.tokenizer {
             if tokenizer.arguments.isEmpty {
@@ -136,7 +138,7 @@ extension FTS3: VirtualTableModule {
         return arguments
     }
     
-    public func database(_ db: Database, didCreate tableName: String, using definition: FTS3TableDefinition) { }
+    public func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: FTS3TableDefinition) { }
 }
 
 /// A `FTS3TableDefinition` lets you define the components of an FTS3

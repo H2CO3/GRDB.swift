@@ -61,7 +61,7 @@ import Dispatch
 /// ### Supporting Types
 ///
 /// - ``AnyDatabaseWriter``
-public protocol DatabaseWriter: DatabaseReader {
+public protocol DatabaseWriterBase: DatabaseReaderBase {
     
     // MARK: - Writing in Database
     
@@ -98,7 +98,7 @@ public protocol DatabaseWriter: DatabaseReader {
     /// - parameter updates: A closure which accesses the database.
     /// - throws: The error thrown by `updates`.
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    func writeWithoutTransaction<T>(_ updates: (Database) throws -> T) rethrows -> T
+    func writeWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T
     
     /// Executes database operations, and returns their result after they have
     /// finished executing.
@@ -130,7 +130,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///   database access, or the error thrown by `updates`, or
     ///   `CancellationError` if the task is cancelled.
     func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T
     
     /// Executes database operations, and returns their result after they have
@@ -171,7 +171,7 @@ public protocol DatabaseWriter: DatabaseReader {
     /// - parameter updates: A closure which accesses the database.
     /// - throws: The error thrown by `updates`.
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    func barrierWriteWithoutTransaction<T>(_ updates: (Database) throws -> T) throws -> T
+    func barrierWriteWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) throws -> T
     
     /// Executes database operations, and returns their result after they have
     /// finished executing.
@@ -213,7 +213,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///   database access, or the error thrown by `updates`, or
     ///   `CancellationError` if the task is cancelled.
     func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T
     
     /// Schedules database operations for execution, and returns immediately.
@@ -256,7 +256,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///   is a `Result` that provides the database connection, or the failure
     ///   that would prevent establishing the barrier access to the database.
     func asyncBarrierWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ updates: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     )
     
     /// Schedules database operations for execution, and returns immediately.
@@ -290,7 +290,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///
     /// - parameter updates: A closure which accesses the database.
     func asyncWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Database) -> Void
+        _ updates: @escaping @Sendable (DatabaseBase<API>) -> Void
     )
     
     /// Executes database operations, and returns their result after they have
@@ -325,7 +325,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///
     /// - parameter updates: A closure which accesses the database.
     /// - throws: The error thrown by `updates`.
-    func unsafeReentrantWrite<T>(_ updates: (Database) throws -> T) rethrows -> T
+    func unsafeReentrantWrite<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T
     
     // MARK: - Reading from Database
     
@@ -374,7 +374,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///   is a `Result` that provides the database connection, or the failure
     ///   that would prevent establishing the read access to the database.
     func spawnConcurrentRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     )
 }
 
@@ -413,7 +413,7 @@ extension DatabaseWriter {
     ///   would happen while establishing the database access or committing
     ///   the transaction.
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func write<T>(_ updates: (Database) throws -> T) throws -> T {
+    public func write<T>(_ updates: (DatabaseBase<API>) throws -> T) throws -> T {
         try writeWithoutTransaction { db in
             var result: T?
             try db.inTransaction {
@@ -461,7 +461,7 @@ extension DatabaseWriter {
     /// - parameter updates: A closure which accesses the database.
     /// - parameter completion: A closure called with the transaction result.
     public func asyncWrite<T>(
-        _ updates: @escaping @Sendable (Database) throws -> T,
+        _ updates: @escaping @Sendable (DatabaseBase<API>) throws -> T,
         completion: @escaping @Sendable (Database, Result<T, Error>) -> Void
     ) {
         asyncWriteWithoutTransaction { db in
@@ -502,7 +502,7 @@ extension DatabaseWriter {
     ///   is deallocated).
     public func add(
         transactionObserver: some TransactionObserver,
-        extent: Database.TransactionObservationExtent = .observerLifetime)
+        extent: DatabaseTransactionObservationExtent = .observerLifetime)
     {
         writeWithoutTransaction { $0.add(transactionObserver: transactionObserver, extent: extent) }
     }
@@ -640,7 +640,7 @@ extension DatabaseWriter {
     ///   database access, or the error thrown by `updates`, or
     ///   `CancellationError` if the task is cancelled.
     public func write<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await writeWithoutTransaction { db in
             var result: T?
@@ -733,7 +733,7 @@ extension DatabaseWriter {
     /// - parameter updates: A closure which accesses the database.
     public func writePublisher<Output>(
         receiveOn scheduler: some Combine.Scheduler = DispatchQueue.main,
-        updates: @escaping @Sendable (Database) throws -> Output
+        updates: @escaping @Sendable (DatabaseBase<API>) throws -> Output
     ) -> DatabasePublishers.Write<Output> {
         OnDemandFuture { fulfill in
             self.asyncWrite(updates, completion: { _, result in
@@ -796,7 +796,7 @@ extension DatabaseWriter {
     /// - parameter value: A closure which reads from the database.
     public func writePublisher<T: Sendable, Output>(
         receiveOn scheduler: some Combine.Scheduler = DispatchQueue.main,
-        updates: @escaping @Sendable (Database) throws -> T,
+        updates: @escaping @Sendable (DatabaseBase<API>) throws -> T,
         thenRead value: @escaping @Sendable (Database, T) throws -> Output
     ) -> DatabasePublishers.Write<Output> {
         OnDemandFuture { fulfill in
@@ -880,40 +880,40 @@ extension AnyDatabaseWriter: DatabaseReader {
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func read<T>(_ value: (Database) throws -> T) throws -> T {
+    public func read<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.read(value)
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await base.read(value)
     }
     
     public func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         base.asyncRead(value)
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func unsafeRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.unsafeRead(value)
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await base.unsafeRead(value)
     }
     
     public func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         base.asyncUnsafeRead(value)
     }
     
-    public func unsafeReentrantRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeReentrantRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.unsafeReentrantRead(value)
     }
     
@@ -931,45 +931,45 @@ extension AnyDatabaseWriter: DatabaseReader {
 
 extension AnyDatabaseWriter: DatabaseWriter {
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func writeWithoutTransaction<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func writeWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try base.writeWithoutTransaction(updates)
     }
     
     public func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await base.writeWithoutTransaction(updates)
     }
 
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func barrierWriteWithoutTransaction<T>(_ updates: (Database) throws -> T) throws -> T {
+    public func barrierWriteWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) throws -> T {
         try base.barrierWriteWithoutTransaction(updates)
     }
     
     public func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await base.barrierWriteWithoutTransaction(updates)
     }
     
     public func asyncBarrierWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ updates: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         base.asyncBarrierWriteWithoutTransaction(updates)
     }
     
     public func asyncWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Database) -> Void
+        _ updates: @escaping @Sendable (DatabaseBase<API>) -> Void
     ) {
         base.asyncWriteWithoutTransaction(updates)
     }
     
-    public func unsafeReentrantWrite<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func unsafeReentrantWrite<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try base.unsafeReentrantWrite(updates)
     }
     
     public func spawnConcurrentRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         base.spawnConcurrentRead(value)
     }

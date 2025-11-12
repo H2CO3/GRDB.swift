@@ -42,7 +42,10 @@ extension FTS4: VirtualTableModule {
         FTS4TableDefinition(configuration: configuration)
     }
     
-    public func moduleArguments(for definition: FTS4TableDefinition, in db: Database) -> [String] {
+    public func moduleArguments(
+        for definition: FTS4TableDefinition,
+        in db: DatabaseBase<some SQLiteAPI>
+    ) -> [String] {
         var arguments: [String] = []
         
         for column in definition.columns {
@@ -95,7 +98,7 @@ extension FTS4: VirtualTableModule {
         return arguments
     }
     
-    public func database(_ db: Database, didCreate tableName: String, using definition: FTS4TableDefinition) throws {
+    public func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: FTS4TableDefinition) throws {
         switch definition.contentMode {
         case .raw:
             break
@@ -397,7 +400,7 @@ public final class FTS4ColumnDefinition {
 @available(*, unavailable)
 extension FTS4ColumnDefinition: Sendable { }
 
-extension Database {
+extension DatabaseBase {
     /// Deletes the synchronization triggers for a synchronized FTS4 table.
     ///
     /// See ``FTS4TableDefinition/synchronize(withTable:)``.

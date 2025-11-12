@@ -84,13 +84,13 @@ private struct PersistableRecordCustomizedCountry : PersistableRecord {
         container["name"] = name
     }
     
-    func willInsert(_ db: Database) throws {
+    func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willInsertCount += 1
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -103,13 +103,13 @@ private struct PersistableRecordCustomizedCountry : PersistableRecord {
         callbacks.didInsertCount += 1
     }
     
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willUpdateCount += 1
     }
     
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -122,13 +122,13 @@ private struct PersistableRecordCustomizedCountry : PersistableRecord {
         callbacks.didUpdateCount += 1
     }
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willSaveCount += 1
     }
     
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -141,13 +141,13 @@ private struct PersistableRecordCustomizedCountry : PersistableRecord {
         callbacks.didSaveCount += 1
     }
     
-    func willDelete(_ db: Database) throws {
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         callbacks.willDeleteCount += 1
     }
     
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         // Make sure database can be used
         try db.execute(sql: "SELECT 1")
         
@@ -185,11 +185,11 @@ private struct PartialPlayer: Codable, PersistableRecord, FetchableRecord {
     
     typealias Columns = FullPlayer.Columns
     
-    func willInsert(_ db: Database) throws {
+    func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willInsertCount += 1
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         callbacks.aroundInsertEnterCount += 1
         _ = try insert()
         callbacks.aroundInsertExitCount += 1
@@ -199,11 +199,11 @@ private struct PartialPlayer: Codable, PersistableRecord, FetchableRecord {
         callbacks.didInsertCount += 1
     }
     
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         callbacks.willUpdateCount += 1
     }
     
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         callbacks.aroundUpdateEnterCount += 1
         _ = try update()
         callbacks.aroundUpdateExitCount += 1
@@ -213,11 +213,11 @@ private struct PartialPlayer: Codable, PersistableRecord, FetchableRecord {
         callbacks.didUpdateCount += 1
     }
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willSaveCount += 1
     }
     
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         callbacks.aroundSaveEnterCount += 1
         _ = try save()
         callbacks.aroundSaveExitCount += 1
@@ -227,11 +227,11 @@ private struct PartialPlayer: Codable, PersistableRecord, FetchableRecord {
         callbacks.didSaveCount += 1
     }
     
-    func willDelete(_ db: Database) throws {
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willDeleteCount += 1
     }
     
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         callbacks.aroundDeleteEnterCount += 1
         _ = try delete()
         callbacks.aroundDeleteExitCount += 1
@@ -260,11 +260,11 @@ private struct FullPlayer: Codable, PersistableRecord, FetchableRecord {
     
     let callbacks = Callbacks()
     
-    func willInsert(_ db: Database) throws {
+    func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willInsertCount += 1
     }
     
-    func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         callbacks.aroundInsertEnterCount += 1
         _ = try insert()
         callbacks.aroundInsertExitCount += 1
@@ -274,11 +274,11 @@ private struct FullPlayer: Codable, PersistableRecord, FetchableRecord {
         callbacks.didInsertCount += 1
     }
     
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         callbacks.willUpdateCount += 1
     }
     
-    func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         callbacks.aroundUpdateEnterCount += 1
         _ = try update()
         callbacks.aroundUpdateExitCount += 1
@@ -288,11 +288,11 @@ private struct FullPlayer: Codable, PersistableRecord, FetchableRecord {
         callbacks.didUpdateCount += 1
     }
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willSaveCount += 1
     }
     
-    func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         callbacks.aroundSaveEnterCount += 1
         _ = try save()
         callbacks.aroundSaveExitCount += 1
@@ -302,11 +302,11 @@ private struct FullPlayer: Codable, PersistableRecord, FetchableRecord {
         callbacks.didSaveCount += 1
     }
     
-    func willDelete(_ db: Database) throws {
+    func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         callbacks.willDeleteCount += 1
     }
     
-    func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         callbacks.aroundDeleteEnterCount += 1
         _ = try delete()
         callbacks.aroundDeleteExitCount += 1

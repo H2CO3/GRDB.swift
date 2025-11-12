@@ -12,11 +12,11 @@ final class DatabaseSnapshotPoolTests: GRDBTestCase {
             }
         }
         
-        func increment(_ db: Database) throws {
+        func increment(_ db: DatabaseBase<some SQLiteAPI>) throws {
             try db.execute(sql: "INSERT INTO counter DEFAULT VALUES")
         }
         
-        func value(_ db: Database) throws -> Int {
+        func value(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
             try Int.fetchOne(db, sql: "SELECT COUNT(*) FROM counter")!
         }
     }

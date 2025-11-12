@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 /// A custom SQL function or aggregate.
 ///
@@ -237,7 +237,7 @@ public final class DatabaseFunction: Identifiable, Sendable {
     
     /// Calls sqlite3_create_function_v2
     /// See <https://sqlite.org/c3ref/create_function.html>
-    func install(in db: Database) {
+    func install(in db: DatabaseBase<some SQLiteAPI>) {
         // Retain the function definition
         let definition = kind.definition
         let definitionP = Unmanaged.passRetained(definition).toOpaque()
@@ -264,7 +264,7 @@ public final class DatabaseFunction: Identifiable, Sendable {
     
     /// Calls sqlite3_create_function_v2
     /// See <https://sqlite.org/c3ref/create_function.html>
-    func uninstall(in db: Database) {
+    func uninstall(in db: DatabaseBase<some SQLiteAPI>) {
         let code = sqlite3_create_function_v2(
             db.sqliteConnection,
             id.name,

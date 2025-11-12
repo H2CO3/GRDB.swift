@@ -1,15 +1,15 @@
 #if SQLITE_ENABLE_SNAPSHOT && !SQLITE_DISABLE_SNAPSHOT
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 /// An instance of WALSnapshot records the state of a WAL mode database for some
 /// specific point in history.
@@ -25,12 +25,12 @@ final class WALSnapshot: @unchecked Sendable {
     // <https://www.sqlite.org/c3ref/snapshot.html>
     let sqliteSnapshot: UnsafeMutablePointer<sqlite3_snapshot>
     
-    init(_ db: Database) throws {
+    init(_ db: DatabaseBase<some SQLiteAPI>) throws {
         var sqliteSnapshot: UnsafeMutablePointer<sqlite3_snapshot>?
         let code = withUnsafeMutablePointer(to: &sqliteSnapshot) {
             return sqlite3_snapshot_get(db.sqliteConnection, "main", $0)
         }
-        guard code == SQLITE_OK else {
+        guard code == API.SQLITE_OK else {
             // <https://www.sqlite.org/c3ref/snapshot_get.html>
             //
             // > The following must be true for sqlite3_snapshot_get() to succeed. [...]

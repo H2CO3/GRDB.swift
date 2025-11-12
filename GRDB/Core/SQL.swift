@@ -181,7 +181,7 @@ public struct SQL: Sendable {
     ///
     /// - parameter db: A database connection.
     /// - returns: A tuple made of a raw SQL string, and statement arguments.
-    public func build(_ db: Database) throws -> (sql: String, arguments: StatementArguments) {
+    public func build(_ db: DatabaseBase<some SQLiteAPI>) throws -> (sql: String, arguments: StatementArguments) {
         let context = SQLGenerationContext(db)
         let sql = try self.sql(context)
         return (sql: sql, arguments: context.arguments)

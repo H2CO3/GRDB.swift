@@ -1,20 +1,20 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 extension Optional: StatementBinding where Wrapped: StatementBinding {
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
         switch self {
         case .none:
-            return sqlite3_bind_null(sqliteStatement, index)
+            return API.sqlite3_bind_null(sqliteStatement.rawValue, index)
         case let .some(value):
             return value.bind(to: sqliteStatement, at: index)
         }
@@ -87,11 +87,11 @@ extension Optional: DatabaseValueConvertible where Wrapped: DatabaseValueConvert
 extension Optional: StatementColumnConvertible where Wrapped: StatementColumnConvertible {
     @inline(__always)
     @inlinable
-    public static func fromStatement(_ sqliteStatement: SQLiteStatement, atUncheckedIndex index: CInt) -> Self? {
+    public static func fromStatement<API>(_ sqliteStatement: SQLiteStatementBase<API>, atUncheckedIndex index: CInt) -> Self? {
         if let value = Wrapped.fromStatement(sqliteStatement, atUncheckedIndex: index) {
             // Valid value
             return value
-        } else if sqlite3_column_type(sqliteStatement, index) == SQLITE_NULL {
+        } else if API.sqlite3_column_type(sqliteStatement.rawValue, index) == API.SQLITE_NULL {
             // NULL
             return .some(.none)
         } else {
@@ -100,7 +100,7 @@ extension Optional: StatementColumnConvertible where Wrapped: StatementColumnCon
         }
     }
     
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
+    public init?(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) {
         guard let value = Wrapped(sqliteStatement: sqliteStatement, index: index) else {
             return nil
         }

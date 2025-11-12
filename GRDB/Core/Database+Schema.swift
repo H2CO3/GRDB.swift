@@ -1,16 +1,16 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
-extension Database {
+extension DatabaseBase {
     /// A cache for the available database schemas.
     struct SchemaCache {
         /// The available schema identifiers, in the order of SQLite resolution:
@@ -966,7 +966,7 @@ extension Database {
     }
 }
 
-extension Database {
+extension DatabaseBase {
     
     /// Returns the columns in a table or a view.
     ///
@@ -1485,7 +1485,7 @@ public struct ForeignKeyViolation: Sendable {
     /// ```
     ///
     /// See also ``description``.
-    public func failureDescription(_ db: Database) throws -> String {
+    public func failureDescription(_ db: DatabaseBase<some SQLiteAPI>) throws -> String {
         // Grab detailed information, if possible, for better error message
         let originRow = try originRowID.flatMap { rowid in
             try Row.fetchOne(db, sql: "SELECT * FROM \(originTable.quotedDatabaseIdentifier) WHERE rowid = \(rowid)")
@@ -1517,7 +1517,7 @@ public struct ForeignKeyViolation: Sendable {
     /// Converts the violation into a ``DatabaseError``.
     ///
     /// The returned error has the extended code `SQLITE_CONSTRAINT_FOREIGNKEY`.
-    public func databaseError(_ db: Database) -> DatabaseError {
+    public func databaseError(_ db: DatabaseBase<some SQLiteAPI>) -> DatabaseError {
         // Grab detailed information, if possible, for better error message.
         // If detailed information is not available, fallback to plain description.
         let message = (try? failureDescription(db)) ?? String(describing: self)
@@ -1840,7 +1840,7 @@ struct SchemaInfo: Equatable {
 
 extension SchemaInfo {
     /// - parameter schemaTableName: "sqlite_master" or "sqlite_temp_master"
-    init(_ db: Database, schemaTableName: String) throws {
+    init(_ db: DatabaseBase<some SQLiteAPI>, schemaTableName: String) throws {
         objects = try SchemaObject.fetchSet(db, sql: """
             SELECT type, name, tbl_name, sql FROM \(schemaTableName)
             """)

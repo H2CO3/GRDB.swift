@@ -33,26 +33,28 @@
 /// - ``writeRow(_:statement:to:)``
 /// - ``finalize(_:statement:to:)``
 public protocol DumpFormat {
+#warning("TODO: incompatible with GRDB 7")
     /// Writes a row from the given statement.
     ///
     /// - Parameters:
     ///   - db: A connection to the database
     ///   - statement: The iterated statement
     ///   - stream: A stream for text output.
-    mutating func writeRow(
-        _ db: Database,
-        statement: Statement,
+    mutating func writeRow<API>(
+        _ db: DatabaseBase<API>,
+        statement: StatementBase<API>,
         to stream: inout DumpStream) throws
     
+#warning("TODO: incompatible with GRDB 7")
     /// All rows from the statement have been printed.
     ///
     /// - Parameters:
     ///   - db: A connection to the database
     ///   - statement: The statement that was iterated.
     ///   - stream: A stream for text output.
-    mutating func finalize(
-        _ db: Database,
-        statement: Statement,
+    mutating func finalize<API>(
+        _ db: DatabaseBase<API>,
+        statement: StatementBase<API>,
         to stream: inout DumpStream)
 }
 

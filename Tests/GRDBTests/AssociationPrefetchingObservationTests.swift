@@ -10,7 +10,7 @@ private struct CompoundPrimaryKeyChild: TableRecord { }
 
 class AssociationPrefetchingObservationTests: GRDBTestCase {
     private func assertRequestRegionEqual<T>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         _ request: QueryInterfaceRequest<T>,
         _ expectedDescriptions: String...,
         file: StaticString = #file, line: UInt = #line) throws

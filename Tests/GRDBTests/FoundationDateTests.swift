@@ -323,7 +323,7 @@ class FoundationDateTests : GRDBTestCase {
         }
         
         func assert(
-            _ db: Database,
+            _ db: DatabaseBase<some SQLiteAPI>,
             _ expression: SQLExpression,
             equal expectedDate: Date,
             file: StaticString = #file,
@@ -372,7 +372,7 @@ class FoundationDateTests : GRDBTestCase {
         }
         
         func assert(
-            _ db: Database,
+            _ db: DatabaseBase<some SQLiteAPI>,
             _ expression: SQLExpression,
             equal expectedDate: String,
             file: StaticString = #file,

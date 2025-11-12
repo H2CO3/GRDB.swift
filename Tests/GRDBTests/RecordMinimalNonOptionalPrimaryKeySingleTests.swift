@@ -13,7 +13,7 @@ private class MinimalNonOptionalPrimaryKeySingle: Record, Hashable {
         super.init()
     }
     
-    static func setup(_ db: Database) throws {
+    static func setup(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.execute(sql: "CREATE TABLE minimalSingles (id TEXT NOT NULL PRIMARY KEY)")
     }
     

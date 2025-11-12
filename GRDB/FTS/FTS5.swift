@@ -1,15 +1,15 @@
 #if SQLITE_ENABLE_FTS5
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
@@ -119,7 +119,7 @@ public struct FTS5 {
     /// Returns a pointer to the `fts5_api` structure.
     ///
     /// Related SQLite documentation: <https://www.sqlite.org/fts5.html#extending_fts5>
-    public static func api(_ db: Database) -> UnsafePointer<fts5_api> {
+    public static func api(_ db: DatabaseBase<some SQLiteAPI>) -> UnsafePointer<fts5_api> {
         var statement: SQLiteStatement?
         var api: UnsafePointer<fts5_api>?
         let type: StaticString = "fts5_api_ptr"
@@ -152,7 +152,10 @@ extension FTS5: VirtualTableModule {
     }
     
     /// Don't use this method.
-    public func moduleArguments(for definition: FTS5TableDefinition, in db: Database) throws -> [String] {
+    public func moduleArguments(
+        for definition: FTS5TableDefinition,
+        in db: DatabaseBase<some SQLiteAPI>
+    ) throws -> [String] {
         var arguments: [String] = []
         
         if definition.columns.isEmpty {
@@ -223,7 +226,7 @@ extension FTS5: VirtualTableModule {
     /// Reserved; part of the VirtualTableModule protocol.
     ///
     /// See Database.create(virtualTable:options:using:_:)
-    public func database(_ db: Database, didCreate tableName: String, using definition: FTS5TableDefinition) throws {
+    public func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: FTS5TableDefinition) throws {
         switch definition.contentMode {
         case .raw:
             break
@@ -531,7 +534,7 @@ extension Column {
     public static let rank = Column("rank")
 }
 
-extension Database {
+extension DatabaseBase {
     /// Deletes the synchronization triggers for a synchronized FTS5 table.
     public func dropFTS5SynchronizationTriggers(forTable tableName: String) throws {
         try execute(sql: """

@@ -3,11 +3,11 @@
 ///
 /// `WALSnapshotTransaction` **takes ownership** of its reader
 /// `SerializedDatabase` (TODO: make it a move-only type eventually).
-final class WALSnapshotTransaction: @unchecked Sendable {
+final class WALSnapshotTransactionBase<API: SQLiteAPI>: @unchecked Sendable {
     // @unchecked because `databaseAccess` is protected by a mutex.
     
     private struct DatabaseAccess {
-        let reader: SerializedDatabase
+        let reader: SerializedDatabaseBase<API>
         let release: @Sendable (_ isInsideTransaction: Bool) -> Void
         
         // MUST be called only once
@@ -60,7 +60,7 @@ final class WALSnapshotTransaction: @unchecked Sendable {
     /// - parameter release: A closure to call when the read-only connection
     ///   is no longer used.
     init(
-        onReader reader: SerializedDatabase,
+        onReader reader: SerializedDatabaseBase<API>,
         release: @escaping @Sendable (_ isInsideTransaction: Bool) -> Void)
     throws
     {
@@ -90,7 +90,7 @@ final class WALSnapshotTransaction: @unchecked Sendable {
     
     /// Executes database operations in the snapshot transaction, and
     /// returns their result after they have finished executing.
-    func read<T>(_ value: (Database) throws -> T) throws -> T {
+    func read<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         try databaseAccessMutex.withLock { databaseAccess in
             guard let databaseAccess else {
                 throw DatabaseError.snapshotIsLost()
@@ -103,7 +103,7 @@ final class WALSnapshotTransaction: @unchecked Sendable {
     
     /// Schedules database operations for execution, and
     /// returns immediately.
-    func asyncRead(_ value: @escaping @Sendable (Result<Database, Error>) -> Void) {
+    func asyncRead(_ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void) {
         databaseAccessMutex.withLock { databaseAccess in
             guard let databaseAccess else {
                 value(.failure(DatabaseError.snapshotIsLost()))

@@ -16,7 +16,7 @@ private struct Player: FetchableRecord, MutablePersistableRecord, Codable {
         self.creationDate = creationDate
     }
     
-    mutating func willInsert(_ db: Database) throws {
+    mutating func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if creationDate == nil {
            creationDate = Date()
         }

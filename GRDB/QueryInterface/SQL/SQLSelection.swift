@@ -314,7 +314,7 @@ extension [SQLSelection] {
     /// This method raises a fatal error if the selection contains a literal,
     ///
     /// See `SQLSelection.columnCount(_:)` for testability.
-    func columnCount(_ context: SQLGenerationContext) throws -> Int {
+    func columnCount(_ context: SQLGenerationContext<some SQLiteAPI>) throws -> Int {
         try reduce(0) { acc, selection in
             guard let count = try selection.columnCount(context) else {
                 // Found an SQL literal:

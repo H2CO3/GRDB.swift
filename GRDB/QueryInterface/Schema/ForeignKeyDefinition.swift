@@ -22,7 +22,7 @@ public final class ForeignKeyDefinition {
     var updateAction: Database.ForeignKeyAction?
     var indexing: Indexing?
     var isDeferred: Bool
-    var notNullConflictResolution: Database.ConflictResolution?
+    var notNullConflictResolution: DatabaseConflictResolution?
     
     init(
         name: String,
@@ -59,7 +59,7 @@ public final class ForeignKeyDefinition {
     /// - returns: `self` so that you can further refine the definition of
     ///   the association.
     @discardableResult
-    public func notNull(onConflict conflictResolution: Database.ConflictResolution? = nil) -> Self {
+    public func notNull(onConflict conflictResolution: DatabaseConflictResolution? = nil) -> Self {
         notNullConflictResolution = conflictResolution ?? .abort
         return self
     }
@@ -87,7 +87,7 @@ public final class ForeignKeyDefinition {
         return self
     }
     
-    func primaryKey(_ db: Database) throws -> SQLPrimaryKeyDescriptor {
+    func primaryKey(_ db: DatabaseBase<some SQLiteAPI>) throws -> SQLPrimaryKeyDescriptor {
         if let table {
             return try SQLPrimaryKeyDescriptor.find(db, table: table)
         }

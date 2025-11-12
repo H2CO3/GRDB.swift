@@ -173,8 +173,10 @@ extension Association {
 
 // SelectionRequest conformance
 extension Association {
-    public func selectWhenConnected(
-        _ selection: @escaping @Sendable (Database) throws -> [any SQLSelectable]
+#warning("TODO: expose a version with default api")
+    public func selectWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ selection: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLSelectable]
     ) -> Self {
         withDestinationRelation { relation in
             relation = relation.selectWhenConnected { db in
@@ -183,8 +185,10 @@ extension Association {
         }
     }
     
-    public func annotatedWhenConnected(
-        with selection: @escaping @Sendable (Database) throws -> [any SQLSelectable]
+#warning("TODO: expose a version with default api")
+    public func annotatedWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        with selection: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLSelectable]
     ) -> Self {
         withDestinationRelation { relation in
             relation = relation.annotatedWhenConnected { db in
@@ -196,8 +200,10 @@ extension Association {
 
 // FilteredRequest conformance
 extension Association {
-    public func filterWhenConnected(
-        _ predicate: @escaping @Sendable (Database) throws -> any SQLExpressible
+#warning("TODO: expose a version with default api")
+    public func filterWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ predicate: @escaping @Sendable (DatabaseBase<API>) throws -> any SQLExpressible
     ) -> Self {
         withDestinationRelation { relation in
             relation = relation.filterWhenConnected { db in
@@ -209,8 +215,10 @@ extension Association {
 
 // OrderedRequest conformance
 extension Association {
-    public func orderWhenConnected(
-        _ orderings: @escaping @Sendable (Database) throws -> [any SQLOrderingTerm]
+#warning("TODO: expose a version with default api")
+    public func orderWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ orderings: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLOrderingTerm]
     ) -> Self {
         withDestinationRelation { relation in
             relation = relation.orderWhenConnected { db in
@@ -247,8 +255,10 @@ extension Association {
 
 // AggregatingRequest conformance
 extension Association {
-    public func groupWhenConnected(
-        _ expressions: @escaping @Sendable (Database) throws -> [any SQLExpressible]
+#warning("TODO: expose a version with default api")
+    public func groupWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ expressions: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLExpressible]
     ) -> Self {
         withDestinationRelation { relation in
             relation = relation.groupWhenConnected { db in
@@ -257,8 +267,10 @@ extension Association {
         }
     }
     
-    public func havingWhenConnected(
-        _ predicate: @escaping @Sendable (Database) throws -> any SQLExpressible
+#warning("TODO: expose a version with default api")
+    public func havingWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ predicate: @escaping @Sendable (DatabaseBase<API>) throws -> any SQLExpressible
     ) -> Self {
         withDestinationRelation { relation in
             relation = relation.havingWhenConnected { db in

@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 // MARK: - Value Types
 
@@ -20,8 +20,8 @@ extension Bool: DatabaseValueConvertible, StatementColumnConvertible {
     /// - parameters:
     ///     - sqliteStatement: A pointer to an SQLite statement.
     ///     - index: The column index.
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
-        self = sqlite3_column_int64(sqliteStatement, index) != 0
+    public init<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        self = API.sqlite3_column_int64(sqliteStatement.rawValue, index) != 0
     }
     
     /// Returns an INTEGER database value.
@@ -102,8 +102,8 @@ extension Bool: DatabaseValueConvertible, StatementColumnConvertible {
         }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, self ? 1 : 0)
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, self ? 1 : 0)
     }
 }
 
@@ -117,8 +117,8 @@ extension Int: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = Int(exactly: int64) else { return nil }
         self = v
     }
@@ -141,8 +141,8 @@ extension Int: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { Int(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -156,8 +156,8 @@ extension Int8: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = Int8(exactly: int64) else { return nil }
         self = v
     }
@@ -180,8 +180,8 @@ extension Int8: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { Int8(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -195,8 +195,8 @@ extension Int16: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = Int16(exactly: int64) else { return nil }
         self = v
     }
@@ -219,8 +219,8 @@ extension Int16: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { Int16(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -234,8 +234,8 @@ extension Int32: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = Int32(exactly: int64) else { return nil }
         self = v
     }
@@ -258,8 +258,8 @@ extension Int32: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { Int32(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -271,8 +271,8 @@ extension Int64: DatabaseValueConvertible, StatementColumnConvertible {
     /// - parameters:
     ///     - sqliteStatement: A pointer to an SQLite statement.
     ///     - index: The column index.
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
-        self = sqlite3_column_int64(sqliteStatement, index)
+    public init<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        self = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
     }
     
     /// Returns an INTEGER database value.
@@ -301,8 +301,8 @@ extension Int64: DatabaseValueConvertible, StatementColumnConvertible {
         }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, self)
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, self)
     }
 }
 
@@ -316,8 +316,8 @@ extension UInt: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = UInt(exactly: int64) else { return nil }
         self = v
     }
@@ -340,8 +340,8 @@ extension UInt: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { UInt(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -355,8 +355,8 @@ extension UInt8: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = UInt8(exactly: int64) else { return nil }
         self = v
     }
@@ -379,8 +379,8 @@ extension UInt8: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { UInt8(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -394,8 +394,8 @@ extension UInt16: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = UInt16(exactly: int64) else { return nil }
         self = v
     }
@@ -418,8 +418,8 @@ extension UInt16: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { UInt16(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -433,8 +433,8 @@ extension UInt32: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = UInt32(exactly: int64) else { return nil }
         self = v
     }
@@ -457,8 +457,8 @@ extension UInt32: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { UInt32(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -472,8 +472,8 @@ extension UInt64: DatabaseValueConvertible, StatementColumnConvertible {
     ///     - index: The column index.
     @inline(__always)
     @inlinable
-    public init?(sqliteStatement: SQLiteStatement, index: CInt) {
-        let int64 = sqlite3_column_int64(sqliteStatement, index)
+    public init?<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        let int64 = API.sqlite3_column_int64(sqliteStatement.rawValue, index)
         guard let v = UInt64(exactly: int64) else { return nil }
         self = v
     }
@@ -496,8 +496,8 @@ extension UInt64: DatabaseValueConvertible, StatementColumnConvertible {
         Int64.fromDatabaseValue(dbValue).flatMap { UInt64(exactly: $0) }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_int64(sqliteStatement, index, Int64(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_int64(sqliteStatement.rawValue, index, Int64(self))
     }
 }
 
@@ -509,8 +509,8 @@ extension Double: DatabaseValueConvertible, StatementColumnConvertible {
     /// - parameters:
     ///     - sqliteStatement: A pointer to an SQLite statement.
     ///     - index: The column index.
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
-        self = sqlite3_column_double(sqliteStatement, index)
+    public init<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        self = API.sqlite3_column_double(sqliteStatement.rawValue, index)
     }
     
     /// Returns a REAL database value.
@@ -536,8 +536,8 @@ extension Double: DatabaseValueConvertible, StatementColumnConvertible {
         }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_double(sqliteStatement, index, self)
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_double(sqliteStatement.rawValue, index, self)
     }
 }
 
@@ -549,8 +549,8 @@ extension Float: DatabaseValueConvertible, StatementColumnConvertible {
     /// - parameters:
     ///     - sqliteStatement: A pointer to an SQLite statement.
     ///     - index: The column index.
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
-        self = Float(sqlite3_column_double(sqliteStatement, index))
+    public init<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        self = Float(API.sqlite3_column_double(sqliteStatement.rawValue, index))
     }
     
     /// Returns a REAL database value.
@@ -576,8 +576,8 @@ extension Float: DatabaseValueConvertible, StatementColumnConvertible {
         }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_double(sqliteStatement, index, Double(self))
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_double(sqliteStatement.rawValue, index, Double(self))
     }
 }
 
@@ -589,8 +589,8 @@ extension String: DatabaseValueConvertible, StatementColumnConvertible {
     /// - parameters:
     ///     - sqliteStatement: A pointer to an SQLite statement.
     ///     - index: The column index.
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
-        self = String(cString: sqlite3_column_text(sqliteStatement, index)!)
+    public init<API>(sqliteStatement: SQLiteStatementBase<API>, index: CInt) {
+        self = String(cString: API.sqlite3_column_text(sqliteStatement.rawValue, index)!)
     }
     
     /// Returns a TEXT database value.
@@ -619,8 +619,8 @@ extension String: DatabaseValueConvertible, StatementColumnConvertible {
         }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
-        sqlite3_bind_text(sqliteStatement, index, self, -1, SQLITE_TRANSIENT)
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
+        API.sqlite3_bind_text(sqliteStatement.rawValue, index, self, -1, SQLITE_TRANSIENT)
     }
     
     /// Calls the given closure after binding a statement argument.
@@ -630,9 +630,9 @@ extension String: DatabaseValueConvertible, StatementColumnConvertible {
     /// - parameter sqliteStatement: An SQLite statement.
     /// - parameter index: 1-based index to statement arguments.
     /// - parameter body: The closure to execute when argument is bound.
-    func withBinding<T>(to sqliteStatement: SQLiteStatement, at index: CInt, do body: () throws -> T) throws -> T {
+    func withBinding<API, T>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt, do body: () throws -> T) throws -> T {
         try withCString {
-            let code = sqlite3_bind_text(sqliteStatement, index, $0, -1, nil /* SQLITE_STATIC */)
+            let code = API.sqlite3_bind_text(sqliteStatement.rawValue, index, $0, -1, nil /* SQLITE_STATIC */)
             try checkBindingSuccess(code: code, sqliteStatement: sqliteStatement)
             return try body()
         }

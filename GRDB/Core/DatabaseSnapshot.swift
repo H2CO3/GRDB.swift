@@ -154,24 +154,24 @@ extension DatabaseSnapshot: DatabaseSnapshotReader {
     // MARK: - Reading from Database
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func read<T>(_ block: (Database) throws -> T) rethrows -> T {
+    public func read<T>(_ block: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T {
         try reader.sync(block)
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T
     ) async throws -> T {
         try await reader.execute(value)
     }
     
     public func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<some SQLiteAPI>, Error>) -> Void
     ) {
         reader.async { value(.success($0)) }
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func unsafeRead<T>(_ value: (Database) throws -> T) rethrows -> T {
+    public func unsafeRead<T>(_ value: (DatabaseBase<some SQLiteAPI>) throws -> T) rethrows -> T {
         try reader.sync(value)
     }
     
@@ -180,18 +180,18 @@ extension DatabaseSnapshot: DatabaseSnapshotReader {
     // `DatabaseSnapshotReader`,  because of
     // <https://github.com/apple/swift/issues/74469>.
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T
     ) async throws -> T {
         try await read(value)
     }
     
     public func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<some SQLiteAPI>, Error>) -> Void
     ) {
         reader.async { value(.success($0)) }
     }
     
-    public func unsafeReentrantRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeReentrantRead<T>(_ value: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T {
         try reader.reentrantSync(value)
     }
     

@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 #if !canImport(Darwin)
 @preconcurrency
@@ -201,7 +201,7 @@ public struct Configuration: Sendable {
     
     // MARK: - Managing SQLite Connections
     
-    private var setups: [@Sendable (Database) throws -> Void] = []
+    private var setups: [@Sendable (DatabaseBase<some SQLiteAPI>) throws -> Void] = []
     
     /// Defines a function to run whenever an SQLite connection is opened.
     ///
@@ -238,7 +238,7 @@ public struct Configuration: Sendable {
     ///
     /// On newly created databases files, ``DatabasePool`` activates the WAL
     /// mode after the preparation functions have run.
-    public mutating func prepareDatabase(_ setup: @escaping @Sendable (Database) throws -> Void) {
+    public mutating func prepareDatabase(_ setup: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> Void) {
         setups.append(setup)
     }
     
@@ -481,7 +481,7 @@ public struct Configuration: Sendable {
         return threadingMode.SQLiteOpenFlags | flags
     }
     
-    func setUp(_ db: Database) throws {
+    func setUp(_ db: DatabaseBase<some SQLiteAPI>) throws {
         for f in setups {
             try f(db)
         }

@@ -2364,7 +2364,7 @@ class AssociationBelongsToSQLTests: GRDBTestCase {
             // View with custom primary key.
             // Existence check is performed on the primary key.
             struct SchemaSource: DatabaseSchemaSource {
-                func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+                func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                     ["id"]
                 }
             }

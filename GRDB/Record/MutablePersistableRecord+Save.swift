@@ -3,11 +3,11 @@
 extension MutablePersistableRecord {
     @inline(__always)
     @inlinable
-    public func willSave(_ db: Database) throws { }
+    public func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws { }
     
     @inline(__always)
     @inlinable
-    public func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    public func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         _ = try save()
     }
     
@@ -34,8 +34,8 @@ extension MutablePersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public mutating func save(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     throws
     {
         try willSave(db)
@@ -73,8 +73,8 @@ extension MutablePersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public func saved(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     throws -> Self
     {
         var result = self
@@ -113,8 +113,8 @@ extension MutablePersistableRecord {
     ///   thrown if the database changes fail due to the IGNORE conflict policy.
     @inlinable // allow specialization so that empty callbacks are removed
     public func saveAndFetch(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     throws -> Self
     where Self: FetchableRecord
     {
@@ -141,8 +141,8 @@ extension MutablePersistableRecord {
     ///   thrown if the database changes fail due to the IGNORE conflict policy.
     @inlinable // allow specialization so that empty callbacks are removed
     public mutating func saveAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         as returnedType: T.Type)
     throws -> T
     {
@@ -188,11 +188,11 @@ extension MutablePersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     /// - precondition: `selection` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
-    public mutating func saveAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+    public mutating func saveAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> T
     {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
@@ -242,8 +242,8 @@ extension MutablePersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func saveAndFetch(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     throws -> Self
     where Self: FetchableRecord
     {
@@ -271,8 +271,8 @@ extension MutablePersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public mutating func saveAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         as returnedType: T.Type)
     throws -> T
     {
@@ -319,11 +319,11 @@ extension MutablePersistableRecord {
     /// - precondition: `selection` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public mutating func saveAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+    public mutating func saveAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> T
     {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
@@ -355,8 +355,8 @@ extension MutablePersistableRecord {
     /// update callbacks.
     @inlinable // allow specialization so that empty callbacks are removed
     mutating func updateOrInsertWithCallbacks(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution?)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution?)
     throws -> PersistenceSuccess
     {
         let (saved, _) = try updateOrInsertAndFetchWithCallbacks(
@@ -372,11 +372,11 @@ extension MutablePersistableRecord {
     /// Executes an `UPDATE` or `INSERT` statement, with `RETURNING` clause
     /// if `selection` is not empty, and runs insertion or update callbacks.
     @inlinable // allow specialization so that empty callbacks are removed
-    mutating func updateOrInsertAndFetchWithCallbacks<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution?,
+    mutating func updateOrInsertAndFetchWithCallbacks<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution?,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> (PersistenceSuccess, T)
     {
         // Attempt at updating if the record has a primary key
@@ -404,7 +404,7 @@ extension MutablePersistableRecord {
     
     /// Return a non-nil dictionary if record has a non-null primary key
     @usableFromInline
-    func primaryKey(_ db: Database) throws -> [String: DatabaseValue]? {
+    func primaryKey(_ db: DatabaseBase<some SQLiteAPI>) throws -> [String: DatabaseValue]? {
         let databaseTableName = type(of: self).databaseTableName
         let primaryKeyInfo = try db.primaryKey(databaseTableName)
         let container = try PersistenceContainer(db, self)

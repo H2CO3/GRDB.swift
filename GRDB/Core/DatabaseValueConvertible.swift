@@ -80,7 +80,7 @@ extension DatabaseValueConvertible {
         .databaseValue(databaseValue)
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
+    public func bind(to sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, at index: CInt) -> CInt {
         databaseValue.bind(to: sqliteStatement, at: index)
     }
 
@@ -276,7 +276,7 @@ extension DatabaseValueConvertible {
     /// - returns: A ``DatabaseValueCursor`` over fetched values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchCursor(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> DatabaseValueCursor<Self>
@@ -307,7 +307,7 @@ extension DatabaseValueConvertible {
     /// - returns: An array.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchAll(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> [Self]
@@ -341,7 +341,7 @@ extension DatabaseValueConvertible {
     /// - returns: An optional value.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchOne(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> Self?
@@ -376,7 +376,7 @@ extension DatabaseValueConvertible where Self: Hashable {
     /// - returns: A set.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchSet(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> Set<Self>
@@ -421,7 +421,7 @@ extension DatabaseValueConvertible {
     /// - returns: A ``DatabaseValueCursor`` over fetched values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchCursor(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -453,7 +453,7 @@ extension DatabaseValueConvertible {
     /// - returns: An array.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -488,7 +488,7 @@ extension DatabaseValueConvertible {
     /// - returns: An optional value.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchOne(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -522,7 +522,7 @@ extension DatabaseValueConvertible where Self: Hashable {
     /// - returns: A set.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchSet(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -581,7 +581,7 @@ extension DatabaseValueConvertible {
     ///     - request: A fetch request.
     /// - returns: A ``DatabaseValueCursor`` over fetched values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchCursor(_ db: Database, _ request: some FetchRequest) throws -> DatabaseValueCursor<Self> {
+    public static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> DatabaseValueCursor<Self> {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         return try fetchCursor(request.statement, adapter: request.adapter)
     }
@@ -622,7 +622,7 @@ extension DatabaseValueConvertible {
     ///     - request: A fetch request.
     /// - returns: An array.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchAll(_ db: Database, _ request: some FetchRequest) throws -> [Self] {
+    public static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> [Self] {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         return try fetchAll(request.statement, adapter: request.adapter)
     }
@@ -666,7 +666,7 @@ extension DatabaseValueConvertible {
     ///     - request: A fetch request.
     /// - returns: An optional value.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchOne(_ db: Database, _ request: some FetchRequest) throws -> Self? {
+    public static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> Self? {
         let request = try request.makePreparedRequest(db, forSingleResult: true)
         return try fetchOne(request.statement, adapter: request.adapter)
     }
@@ -709,7 +709,7 @@ extension DatabaseValueConvertible where Self: Hashable {
     ///     - request: A fetch request.
     /// - returns: A set.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchSet(_ db: Database, _ request: some FetchRequest) throws -> Set<Self> {
+    public static func fetchSet(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> Set<Self> {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         return try fetchSet(request.statement, adapter: request.adapter)
     }
@@ -762,7 +762,7 @@ extension FetchRequest where RowDecoder: DatabaseValueConvertible {
     /// - parameter db: A database connection.
     /// - returns: A ``DatabaseValueCursor`` over fetched values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> DatabaseValueCursor<RowDecoder> {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseValueCursor<RowDecoder> {
         try RowDecoder.fetchCursor(db, self)
     }
     
@@ -800,7 +800,7 @@ extension FetchRequest where RowDecoder: DatabaseValueConvertible {
     /// - parameter db: A database connection.
     /// - returns: An array of values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [RowDecoder] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [RowDecoder] {
         try RowDecoder.fetchAll(db, self)
     }
     
@@ -841,7 +841,7 @@ extension FetchRequest where RowDecoder: DatabaseValueConvertible {
     /// - parameter db: A database connection.
     /// - returns: An optional value.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> RowDecoder? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowDecoder? {
         try RowDecoder.fetchOne(db, self)
     }
 }
@@ -874,7 +874,7 @@ extension FetchRequest where RowDecoder: DatabaseValueConvertible & Hashable {
     /// - parameter db: A database connection.
     /// - returns: A set of values.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<RowDecoder> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<RowDecoder> {
         try RowDecoder.fetchSet(db, self)
     }
 }

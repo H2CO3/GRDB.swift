@@ -23,7 +23,7 @@
 /// see SQLRelation.filterPromise.
 struct DatabasePromise<T> {
     /// Returns the resolved value.
-    let resolve: @Sendable (Database) throws -> T
+    let resolve: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T
     
     /// Creates a promise that resolves to a value.
     init(value: T) where T: Sendable {
@@ -31,7 +31,7 @@ struct DatabasePromise<T> {
     }
     
     /// Creates a promise from a closure.
-    init(_ resolve: @escaping @Sendable (Database) throws -> T) {
+    init(_ resolve: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T) {
         self.resolve = resolve
     }
     

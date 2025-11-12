@@ -1,19 +1,22 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
 /// A raw SQLite statement, suitable for the SQLite C API.
-public typealias SQLiteStatement = OpaquePointer
+//public typealias SQLiteStatement = OpaquePointer
+public struct SQLiteStatementBase<API: SQLiteAPI> {
+    public let rawValue: OpaquePointer
+}
 
 extension String {
     /// SQL statements are separated by semicolons and white spaces.
@@ -37,7 +40,7 @@ extension String {
     }
 }
 
-public final class Statement {
+public final class StatementBase<API: SQLiteAPI> {
     enum TransactionEffect: Equatable {
         case beginTransaction
         case commitTransaction
@@ -48,7 +51,7 @@ public final class Statement {
     }
     
     /// The raw SQLite statement, suitable for the SQLite C API.
-    public let sqliteStatement: SQLiteStatement
+    public let sqliteStatement: SQLiteStatementBase<API>
     
     /// The SQL query.
     public var sql: String {
@@ -839,11 +842,11 @@ public protocol StatementBinding {
     /// - parameter sqliteStatement: An SQLite statement.
     /// - parameter index: 1-based index to statement arguments.
     /// - returns: the code returned by the `sqlite3_bind_xxx` function.
-    func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt
+    func bind(to sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, at index: CInt) -> CInt
 }
 
 /// Helper function for `withBinding(to:at:do:)` methods.
-func checkBindingSuccess(code: CInt, sqliteStatement: SQLiteStatement) throws {
+func checkBindingSuccess(code: CInt, sqliteStatement: SQLiteStatementBase<some SQLiteAPI>) throws {
     if code == SQLITE_OK { return }
     let message = String(cString: sqlite3_errmsg(sqlite3_db_handle(sqliteStatement)))
     let sql = String(cString: sqlite3_sql(sqliteStatement)).trimmedSQLStatement

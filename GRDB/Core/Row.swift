@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
@@ -234,7 +234,7 @@ public final class Row {
     /// The row is implemented on top of StatementRowImpl, which grants *direct*
     /// access to the SQLite statement. Iteration of the statement does modify
     /// the row.
-    init(statement: Statement) {
+    init(statement: StatementBase<some SQLiteAPI>) {
         self.statement = statement
         self.sqliteStatement = statement.sqliteStatement
         self.impl = StatementRowImpl(sqliteStatement: statement.sqliteStatement, statement: statement)
@@ -243,7 +243,7 @@ public final class Row {
     
     /// Creates a row that maps an SQLite statement. Further calls to
     /// sqlite3_step() modify the row.
-    init(sqliteStatement: SQLiteStatement) {
+    init(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>) {
         self.statement = nil
         self.sqliteStatement = sqliteStatement
         self.impl = SQLiteStatementRowImpl(sqliteStatement: sqliteStatement)
@@ -257,8 +257,8 @@ public final class Row {
     /// the values from the SQLite statement so that further iteration of the
     /// statement does not modify the row.
     convenience init(
-        copiedFromSQLiteStatement sqliteStatement: SQLiteStatement,
-        statement: Statement)
+        copiedFromSQLiteStatement sqliteStatement: SQLiteStatementBase<some SQLiteAPI>,
+        statement: StatementBase<some SQLiteAPI>)
     {
         self.init(impl: StatementCopyRowImpl(
                     sqliteStatement: sqliteStatement,
@@ -1736,7 +1736,7 @@ extension Row {
     /// - returns: A ``RowCursor`` over fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchCursor(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> RowCursor
@@ -1764,7 +1764,7 @@ extension Row {
     /// - returns: An array of rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchAll(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> [Row]
@@ -1793,7 +1793,7 @@ extension Row {
     /// - returns: A set of rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchSet(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> Set<Row>
@@ -1822,7 +1822,7 @@ extension Row {
     /// - returns: An optional row.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchOne(
-        _ statement: Statement,
+        _ statement: StatementBase<some SQLiteAPI>,
         arguments: StatementArguments? = nil,
         adapter: (any RowAdapter)? = nil)
     throws -> Row?
@@ -1877,7 +1877,7 @@ extension Row {
     /// - returns: A ``RowCursor`` over fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchCursor(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -1906,7 +1906,7 @@ extension Row {
     /// - returns: An array of rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -1935,7 +1935,7 @@ extension Row {
     /// - returns: A set of rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchSet(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -1964,7 +1964,7 @@ extension Row {
     /// - returns: An optional row.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     public static func fetchOne(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         sql: String,
         arguments: StatementArguments = StatementArguments(),
         adapter: (any RowAdapter)? = nil)
@@ -2027,7 +2027,7 @@ extension Row {
     ///     - request: A fetch request.
     /// - returns: A ``RowCursor`` over fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchCursor(_ db: Database, _ request: some FetchRequest) throws -> RowCursor {
+    public static func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> RowCursor {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         precondition(request.supplementaryFetch == nil, "Not implemented: fetchCursor with supplementary fetch")
         return try fetchCursor(request.statement, adapter: request.adapter)
@@ -2064,7 +2064,7 @@ extension Row {
     ///     - request: A fetch request.
     /// - returns: An array of rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchAll(_ db: Database, _ request: some FetchRequest) throws -> [Row] {
+    public static func fetchAll(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> [Row] {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         let rows = try fetchAll(request.statement, adapter: request.adapter)
         try request.supplementaryFetch?(db, rows, nil)
@@ -2102,7 +2102,7 @@ extension Row {
     ///     - request: A fetch request.
     /// - returns: A set of rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchSet(_ db: Database, _ request: some FetchRequest) throws -> Set<Row> {
+    public static func fetchSet(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> Set<Row> {
         let request = try request.makePreparedRequest(db, forSingleResult: false)
         if let supplementaryFetch = request.supplementaryFetch {
             let rows = try fetchAll(request.statement, adapter: request.adapter)
@@ -2144,7 +2144,7 @@ extension Row {
     ///     - request: A fetch request.
     /// - returns: An optional row.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public static func fetchOne(_ db: Database, _ request: some FetchRequest) throws -> Row? {
+    public static func fetchOne(_ db: DatabaseBase<some SQLiteAPI>, _ request: some FetchRequest) throws -> Row? {
         let request = try request.makePreparedRequest(db, forSingleResult: true)
         guard let row = try fetchOne(request.statement, adapter: request.adapter) else {
             return nil
@@ -2193,7 +2193,7 @@ extension FetchRequest<Row> {
     /// - parameter db: A database connection.
     /// - returns: A ``RowCursor`` over fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchCursor(_ db: Database) throws -> RowCursor {
+    public func fetchCursor(_ db: DatabaseBase<some SQLiteAPI>) throws -> RowCursor {
         try Row.fetchCursor(db, self)
     }
     
@@ -2214,7 +2214,7 @@ extension FetchRequest<Row> {
     /// - parameter db: A database connection.
     /// - returns: An array of fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchAll(_ db: Database) throws -> [Row] {
+    public func fetchAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> [Row] {
         try Row.fetchAll(db, self)
     }
     
@@ -2235,7 +2235,7 @@ extension FetchRequest<Row> {
     /// - parameter db: A database connection.
     /// - returns: A set of fetched rows.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchSet(_ db: Database) throws -> Set<Row> {
+    public func fetchSet(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<Row> {
         try Row.fetchSet(db, self)
     }
     
@@ -2256,7 +2256,7 @@ extension FetchRequest<Row> {
     /// - parameter db: A database connection.
     /// - returns: An optional row.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func fetchOne(_ db: Database) throws -> Row? {
+    public func fetchOne(_ db: DatabaseBase<some SQLiteAPI>) throws -> Row? {
         try Row.fetchOne(db, self)
     }
 }

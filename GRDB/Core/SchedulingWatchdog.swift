@@ -59,7 +59,7 @@ final class SchedulingWatchdog: @unchecked Sendable {
     }
     
     static func preconditionValidQueue(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         _ message: @autoclosure() -> String = "Database was not used on the correct thread.",
         file: StaticString = #file,
         line: UInt = #line)
@@ -69,11 +69,11 @@ final class SchedulingWatchdog: @unchecked Sendable {
     
     /// Returns whether the database argument can be used in the current
     /// dispatch queue.
-    static func allows(_ db: Database) -> Bool {
+    static func allows(_ db: DatabaseBase<some SQLiteAPI>) -> Bool {
         current?.allows(db) ?? false
     }
     
-    func allows(_ db: Database) -> Bool {
+    func allows(_ db: DatabaseBase<some SQLiteAPI>) -> Bool {
         allowedDatabases.contains { $0 === db }
     }
     

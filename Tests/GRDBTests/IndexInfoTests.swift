@@ -84,7 +84,7 @@ class IndexInfoTests: GRDBTestCase {
     
     func testColumnsThatUniquelyIdentityRows_with_view_and_schema_source() throws {
         struct MySchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 ["id"]
             }
         }

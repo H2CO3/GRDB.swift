@@ -99,7 +99,7 @@ public struct SQLExpression: Sendable {
         /// The `CAST(expr AS storage-class)` expression.
         ///
         /// See <https://www.sqlite.org/lang_expr.html#castexpr>.
-        indirect case cast(SQLExpression, Database.StorageClass)
+        indirect case cast(SQLExpression, DatabaseStorageClass)
         
         /// The `BETWEEN` and `NOT BETWEEN` operators.
         ///
@@ -1135,7 +1135,7 @@ extension SQLExpression {
     /// The `CAST(expr AS storage-class)` expression.
     ///
     /// See <https://www.sqlite.org/lang_expr.html#castexpr>.
-    static func cast(_ expression: SQLExpression, as storageClass: Database.StorageClass) -> Self {
+    static func cast(_ expression: SQLExpression, as storageClass: DatabaseStorageClass) -> Self {
         self.init(impl: .cast(expression, storageClass))
     }
     
@@ -1193,7 +1193,7 @@ extension SQLExpression {
     /// The expression as a quoted SQL literal (not public in order to avoid abuses)
     ///
     ///     try "foo'bar".databaseValue.quotedSQL(db) // "'foo''bar'""
-    func quotedSQL(_ db: Database) throws -> String {
+    func quotedSQL(_ db: DatabaseBase<some SQLiteAPI>) throws -> String {
         let context = SQLGenerationContext(db, argumentsSink: .literalValues)
         return try sql(context)
     }
@@ -1223,7 +1223,7 @@ extension SQLExpression {
     /// - parameter acceptsBijection: If true, expressions that define a
     ///   bijection on a column return this column. For example: `-score`
     ///   returns `score`.
-    func column(_ db: Database, for alias: TableAliasBase, acceptsBijection: Bool = false) throws -> String? {
+    func column(_ db: DatabaseBase<some SQLiteAPI>, for alias: TableAliasBase, acceptsBijection: Bool = false) throws -> String? {
         switch impl {
         case let .qualifiedColumn(name, a):
             if alias == a {
@@ -1510,7 +1510,7 @@ extension SQLExpression {
     ///
     ///     // SELECT * FROM "player" WHERE "name" = 'Arthur' LIMIT 1
     ///     try Player.filter(Column("name") == "Arthur").fetchOne(db)
-    func identifyingColums(_ db: Database, for alias: TableAliasBase) throws -> Set<String> {
+    func identifyingColums(_ db: DatabaseBase<some SQLiteAPI>, for alias: TableAliasBase) throws -> Set<String> {
         switch impl {
         case let .rowValue(expressions):
             assert(!expressions.isEmpty)
@@ -1578,7 +1578,7 @@ extension SQLExpression {
     ///     let request = Player.filter(keys: [1, 2, 3])
     ///     let regionObservation = DatabaseRegionObservation(tracking: request)
     ///     let valueObservation = ValueObservation.tracking(request.fetchAll)
-    func identifyingRowIDs(_ db: Database, for alias: TableAliasBase) throws -> Set<Int64>? {
+    func identifyingRowIDs(_ db: DatabaseBase<some SQLiteAPI>, for alias: TableAliasBase) throws -> Set<Int64>? {
         switch impl {
         case let .databaseValue(dbValue):
             if dbValue.isNull || dbValue == false.databaseValue {
@@ -1993,7 +1993,7 @@ struct SQLSimpleFunctionInvocation {
             isJSONValue: isJSONValue)
     }
     
-    func column(_ db: Database, for alias: TableAliasBase) throws -> String? {
+    func column(_ db: DatabaseBase<some SQLiteAPI>, for alias: TableAliasBase) throws -> String? {
         let name = name.uppercased()
         if ["HEX", "QUOTE"].contains(name) && arguments.count == 1 {
             return try arguments[0].column(db, for: alias, acceptsBijection: true)

@@ -1,20 +1,20 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
 /// Data is convertible to and from DatabaseValue.
 extension Data: DatabaseValueConvertible, StatementColumnConvertible {
-    public init(sqliteStatement: SQLiteStatement, index: CInt) {
+    public init(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) {
         if let bytes = sqlite3_column_blob(sqliteStatement, index) {
             let count = Int(sqlite3_column_bytes(sqliteStatement, index))
             self.init(bytes: bytes, count: count) // copy bytes
@@ -49,7 +49,7 @@ extension Data: DatabaseValueConvertible, StatementColumnConvertible {
         }
     }
     
-    public func bind(to sqliteStatement: SQLiteStatement, at index: CInt) -> CInt {
+    public func bind<API>(to sqliteStatement: SQLiteStatementBase<API>, at index: CInt) -> CInt {
         withUnsafeBytes {
             sqlite3_bind_blob(sqliteStatement, index, $0.baseAddress, CInt($0.count), SQLITE_TRANSIENT)
         }

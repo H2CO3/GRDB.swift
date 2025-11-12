@@ -1,18 +1,18 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 
-extension Database {
+extension DatabaseBase {
     
     // MARK: - Statements
     
@@ -434,10 +434,10 @@ extension SQLStatementCursor: Cursor {
     }
 }
 
-extension Database {
+extension DatabaseBase {
     /// Makes sure statement can be executed, and prepares database observation.
     @usableFromInline
-    func statementWillExecute(_ statement: Statement) throws {
+    func statementWillExecute(_ statement: StatementBase<API>) throws {
         // Aborted transactions prevent statement execution (see the
         // documentation of this method for more information).
         try checkForAbortedTransaction(sql: statement.sql, arguments: statement.arguments)
@@ -458,7 +458,7 @@ extension Database {
     /// May throw a cancelled commit error, if a transaction observer cancels
     /// an empty transaction.
     @usableFromInline
-    func statementDidExecute(_ statement: Statement) throws {
+    func statementDidExecute(_ statement: StatementBase<API>) throws {
         if statement.invalidatesDatabaseSchemaCache {
             clearSchemaCache()
         }
@@ -471,7 +471,7 @@ extension Database {
     
     /// Always throws an error
     @usableFromInline
-    func statementDidFail(_ statement: Statement, withResultCode resultCode: CInt) throws -> Never {
+    func statementDidFail(_ statement: StatementBase<API>, withResultCode resultCode: CInt) throws -> Never {
         // Failed statements can not be reused, because `sqlite3_reset` won't
         // be able to restore the statement to its initial state:
         // https://www.sqlite.org/c3ref/reset.html
@@ -534,15 +534,15 @@ extension Database {
 }
 
 /// A thread-unsafe statement cache
-struct StatementCache {
-    unowned let db: Database
-    private var statements: [String: Statement] = [:]
+struct StatementCache<API: SQLiteAPI> {
+    unowned let db: DatabaseBase<API>
+    private var statements: [String: StatementBase<API>] = [:]
     
-    init(database: Database) {
+    init(database: DatabaseBase<API>) {
         self.db = database
     }
     
-    mutating func statement(_ sql: String) throws -> Statement {
+    mutating func statement(_ sql: String) throws -> StatementBase<API> {
         if let statement = statements[sql] {
             return statement
         }
@@ -562,11 +562,11 @@ struct StatementCache {
         statements = [:]
     }
     
-    mutating func remove(_ statement: Statement) {
+    mutating func remove(_ statement: StatementBase<API>) {
         statements.removeFirst { $0.value === statement }
     }
     
-    mutating func removeAll(where shouldBeRemoved: (Statement) -> Bool) {
+    mutating func removeAll(where shouldBeRemoved: (StatementBase<API>) -> Bool) {
         statements = statements.filter { (_, statement) in !shouldBeRemoved(statement) }
     }
 }

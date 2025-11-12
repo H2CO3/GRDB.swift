@@ -67,7 +67,7 @@ public func average(_ value: some SQLSpecificExpressible) -> SQLExpression {
 /// ```
 ///
 /// Related SQLite documentation: <https://www.sqlite.org/lang_expr.html#castexpr>
-public func cast(_ expression: some SQLSpecificExpressible, as storageClass: Database.StorageClass) -> SQLExpression {
+public func cast(_ expression: some SQLSpecificExpressible, as storageClass: DatabaseStorageClass) -> SQLExpression {
     .cast(expression.sqlExpression, as: storageClass)
 }
 

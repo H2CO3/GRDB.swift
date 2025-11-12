@@ -41,14 +41,14 @@ class TruncateOptimizationTests: GRDBTestCase {
             }
         }
         
-        func databaseDidCommit(_ db: Database) {
+        func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
             if !deletionEvents.isEmpty {
                 notify(deletionEvents)
             }
             deletionEvents = [:]
         }
         
-        func databaseDidRollback(_ db: Database) {
+        func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
             deletionEvents = [:]
         }
     }
@@ -56,8 +56,8 @@ class TruncateOptimizationTests: GRDBTestCase {
     class UniversalObserver : TransactionObserver {
         func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool { true }
         func databaseDidChange(with event: DatabaseEvent) { }
-        func databaseDidCommit(_ db: Database) { }
-        func databaseDidRollback(_ db: Database) { }
+        func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) { }
+        func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { }
     }
     
     func testExecuteDelete() throws {
@@ -105,8 +105,8 @@ class TruncateOptimizationTests: GRDBTestCase {
                 }
             }
             
-            func databaseDidCommit(_ db: Database) { }
-            func databaseDidRollback(_ db: Database) { }
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) { }
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { }
         }
 
         let observer = DeletionObserver()

@@ -70,7 +70,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try dbQueue.read(_fetchValues)
     }
     
-    func _fetchValues(_ db: Database) throws {
+    func _fetchValues(_ db: DatabaseBase<some SQLiteAPI>) throws {
         var count = 0
         
         let cursor = try Int.fetchCursor(db, sql: "SELECT i0 FROM items")
@@ -89,7 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try dbQueue.read(_fetchPositionalValues)
     }
     
-    func _fetchPositionalValues(_ db: Database) throws {
+    func _fetchPositionalValues(_ db: DatabaseBase<some SQLiteAPI>) throws {
         var count = 0
         
         let rows = try Row.fetchCursor(db, sql: "SELECT * FROM items")
@@ -118,7 +118,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try dbQueue.read(_fetchNamedValues)
     }
     
-    func _fetchNamedValues(_ db: Database) throws {
+    func _fetchNamedValues(_ db: DatabaseBase<some SQLiteAPI>) throws {
         var count = 0
         
         let rows = try Row.fetchCursor(db, sql: "SELECT * FROM items")
@@ -152,7 +152,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         assert(items[expectedRowCount-1].i9 == expectedRowCount-1)
     }
     
-    func _fetchStructs(_ db: Database) throws -> [ItemStruct] {
+    func _fetchStructs(_ db: DatabaseBase<some SQLiteAPI>) throws -> [ItemStruct] {
         try ItemStruct.fetchAll(db)
     }
     
@@ -168,7 +168,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         assert(items[expectedRowCount-1].i9 == expectedRowCount-1)
     }
     
-    func _fetchCodables(_ db: Database) throws -> [ItemCodable] {
+    func _fetchCodables(_ db: DatabaseBase<some SQLiteAPI>) throws -> [ItemCodable] {
         try ItemCodable.fetchAll(db)
     }
 
@@ -184,7 +184,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         assert(items[expectedRowCount-1].i9 == expectedRowCount-1)
     }
     
-    func _fetchRecords(_ db: Database) throws -> [ItemRecord] {
+    func _fetchRecords(_ db: DatabaseBase<some SQLiteAPI>) throws -> [ItemRecord] {
         try ItemRecord.fetchAll(db)
     }
     
@@ -210,7 +210,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try FileManager.default.removeItem(atPath: databasePath)
     }
     
-    func _insertPositionalValues(_ db: Database) throws {
+    func _insertPositionalValues(_ db: DatabaseBase<some SQLiteAPI>) throws {
         let statement = try db.makeStatement(sql: "INSERT INTO items (i0, i1, i2, i3, i4, i5, i6, i7, i8, i9) VALUES (?,?,?,?,?,?,?,?,?,?)")
         for i in 0..<insertedRowCount {
             try statement.execute(arguments: [i, i, i, i, i, i, i, i, i, i])
@@ -239,7 +239,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try FileManager.default.removeItem(atPath: databasePath)
     }
     
-    func _insertNamedValues(_ db: Database) throws {
+    func _insertNamedValues(_ db: DatabaseBase<some SQLiteAPI>) throws {
         let statement = try db.makeStatement(sql: "INSERT INTO items (i0, i1, i2, i3, i4, i5, i6, i7, i8, i9) VALUES (:i0, :i1, :i2, :i3, :i4, :i5, :i6, :i7, :i8, :i9)")
         for i in 0..<insertedRowCount {
             try statement.execute(arguments: ["i0": i, "i1": i, "i2": i, "i3": i, "i4": i, "i5": i, "i6": i, "i7": i, "i8": i, "i9": i])
@@ -268,7 +268,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try FileManager.default.removeItem(atPath: databasePath)
     }
     
-    func _insertStructs(_ db: Database) throws {
+    func _insertStructs(_ db: DatabaseBase<some SQLiteAPI>) throws {
         for i in 0..<insertedRowCount {
             try ItemStruct(i0: i, i1: i, i2: i, i3: i, i4: i, i5: i, i6: i, i7: i, i8: i, i9: i).insert(db)
         }
@@ -296,7 +296,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try FileManager.default.removeItem(atPath: databasePath)
     }
     
-    func _insertCodables(_ db: Database) throws {
+    func _insertCodables(_ db: DatabaseBase<some SQLiteAPI>) throws {
         for i in 0..<insertedRowCount {
             try ItemCodable(i0: i, i1: i, i2: i, i3: i, i4: i, i5: i, i6: i, i7: i, i8: i, i9: i).insert(db)
         }
@@ -324,7 +324,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         try FileManager.default.removeItem(atPath: databasePath)
     }
     
-    func _insertRecords(_ db: Database) throws {
+    func _insertRecords(_ db: DatabaseBase<some SQLiteAPI>) throws {
         for i in 0..<insertedRowCount {
             try ItemRecord(i0: i, i1: i, i2: i, i3: i, i4: i, i5: i, i6: i, i7: i, i8: i, i9: i).insert(db)
         }

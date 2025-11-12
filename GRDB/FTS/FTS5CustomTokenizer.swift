@@ -1,15 +1,15 @@
 #if SQLITE_ENABLE_FTS5
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 /// A type that implements a custom tokenizer for the ``FTS5`` full-text engine.
 ///
@@ -34,7 +34,7 @@ public protocol FTS5CustomTokenizer: FTS5Tokenizer {
     ///
     /// - parameter db: A Database connection
     /// - parameter arguments: An array of string arguments
-    init(db: Database, arguments: [String]) throws
+    init(db: DatabaseBase<some SQLiteAPI>, arguments: [String]) throws
 }
 
 extension FTS5CustomTokenizer {
@@ -52,12 +52,12 @@ extension FTS5CustomTokenizer {
     }
 }
 
-extension Database {
+extension DatabaseBase {
     
     // MARK: - FTS5
     
     private class FTS5TokenizerConstructor {
-        let db: Database
+        let db: DatabaseBase<some SQLiteAPI>
         let constructor: (Database, [String], UnsafeMutablePointer<OpaquePointer?>?) -> CInt
         
         init(

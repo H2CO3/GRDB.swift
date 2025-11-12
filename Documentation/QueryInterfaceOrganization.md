@@ -123,7 +123,7 @@ Columns are special expressions that allow some optimizations and niceties:
 
 ```swift
 protocol DatabaseRegionConvertible {
-    func databaseRegion(_ db: Database) throws -> DatabaseRegion
+    func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion
 }
 ```
 
@@ -207,10 +207,10 @@ protocol FetchRequest<RowDecoder>: SQLSubqueryable, DatabaseRegionConvertible {
     associatedtype RowDecoder
     
     /// Returns a PreparedRequest that is ready to be executed.
-    func makePreparedRequest(_ db: Database, forSingleResult singleResult: Bool) throws -> PreparedRequest
+    func makePreparedRequest(_ db: DatabaseBase<some SQLiteAPI>, forSingleResult singleResult: Bool) throws -> PreparedRequest
     
     /// Returns the number of rows fetched by the request.
-    func fetchCount(_ db: Database) throws -> Int
+    func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int
 }
 ```
 

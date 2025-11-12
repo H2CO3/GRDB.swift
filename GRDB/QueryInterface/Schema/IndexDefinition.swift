@@ -19,7 +19,7 @@ public struct IndexOptions: OptionSet, Sendable {
     public static let unique = IndexOptions(rawValue: 1 << 1)
 }
 
-extension Database {
+extension DatabaseBase {
     static func defaultIndexName(on table: String, columns: [String]) -> String {
         "index_\(table)_on_\(columns.joined(separator: "_"))"
     }

@@ -191,14 +191,14 @@ extension SQLRequest: FetchRequest {
         .literal(sqlLiteral)
     }
     
-    public func fetchCount(_ db: Database) throws -> Int {
+    public func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try SQLRequest<Int>("SELECT COUNT(*) FROM (\(self))").fetchOne(db)!
     }
     
-    public func makePreparedRequest(
-        _ db: Database,
+    public func makePreparedRequest<API>(
+        _ db: DatabaseBase<API>,
         forSingleResult singleResult: Bool = false)
-    throws -> PreparedRequest
+    throws -> PreparedRequestBase<API>
     {
         let context = SQLGenerationContext(db)
         let sql = try sqlLiteral.sql(context)

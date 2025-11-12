@@ -32,7 +32,7 @@ private let jpegData = try! Data(contentsOf: testBundle.url(forResource: "Betty"
 class DatabaseValueConversionTests : GRDBTestCase {
     
     private func assertDecoding<T: DatabaseValueConvertible & StatementColumnConvertible & Equatable>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         _ sql: String,
         _ type: T.Type,
         expectedSQLiteConversion: T?,
@@ -84,7 +84,7 @@ class DatabaseValueConversionTests : GRDBTestCase {
     }
     
     private func assertFailedDecoding<T: DatabaseValueConvertible>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         _ sql: String,
         _ type: T.Type,
         file: StaticString = #file,

@@ -4,8 +4,8 @@ import Foundation
 import UIKit
 #endif
 
-public final class DatabasePool {
-    private let writer: SerializedDatabase
+public final class DatabasePoolBase<API: SQLiteAPI> {
+    private let writer: SerializedDatabase<API>
     
     /// The pool of reader connections.
     /// It is constant, until close() sets it to nil.
@@ -143,9 +143,9 @@ public final class DatabasePool {
 }
 
 // @unchecked because of readerPool and suspensionObservers
-extension DatabasePool: @unchecked Sendable { }
+extension DatabasePoolBase: @unchecked Sendable { }
 
-extension DatabasePool {
+extension DatabasePoolBase {
     
     // MARK: - Memory management
     
@@ -263,7 +263,7 @@ extension DatabasePool {
     #endif
 }
 
-extension DatabasePool: DatabaseReader {
+extension DatabasePoolBase: DatabaseReaderBase {
     
     public func close() throws {
         try readerPool?.barrier {
@@ -336,7 +336,7 @@ extension DatabasePool: DatabaseReader {
     // MARK: - Reading from Database
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func read<T>(_ value: (Database) throws -> T) throws -> T {
+    public func read<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         GRDBPrecondition(currentReader == nil, "Database methods are not reentrant.")
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -352,7 +352,7 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -379,7 +379,7 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         guard let readerPool else {
             value(.failure(DatabaseError.connectionIsClosed()))
@@ -418,7 +418,7 @@ extension DatabasePool: DatabaseReader {
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func unsafeRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         GRDBPrecondition(currentReader == nil, "Database methods are not reentrant.")
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -432,7 +432,7 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -447,7 +447,7 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func asyncUnsafeRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         guard let readerPool else {
             value(.failure(DatabaseError.connectionIsClosed()))
@@ -475,7 +475,7 @@ extension DatabasePool: DatabaseReader {
         }
     }
     
-    public func unsafeReentrantRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeReentrantRead<T>(_ value: (DatabaseBase<API>) throws -> T) throws -> T {
         if let reader = currentReader {
             return try reader.reentrantSync(value)
         } else if writer.onValidQueue {
@@ -494,7 +494,7 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func spawnConcurrentRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         asyncConcurrentRead(value)
     }
@@ -537,7 +537,7 @@ extension DatabasePool: DatabaseReader {
     ///
     /// - parameter value: A function that accesses the database.
     public func asyncConcurrentRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         // Check that we're on the writer queue...
         writer.execute { db in
@@ -686,13 +686,13 @@ extension DatabasePool: DatabaseReader {
     
 #if SQLITE_ENABLE_SNAPSHOT && !SQLITE_DISABLE_SNAPSHOT
     /// Returns a long-lived WAL snapshot transaction on a reader connection.
-    func walSnapshotTransaction() throws -> WALSnapshotTransaction {
+    func walSnapshotTransaction() throws -> WALSnapshotTransactionBase<API> {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
         }
         
         let (reader, releaseReader) = try readerPool.get()
-        return try WALSnapshotTransaction(onReader: reader, release: { isInsideTransaction in
+        return try WALSnapshotTransactionBase(onReader: reader, release: { isInsideTransaction in
             // Discard the connection if the transaction could not be
             // properly ended. If we'd reuse it, the next read would
             // fail because we'd fail starting a read transaction.
@@ -705,7 +705,7 @@ extension DatabasePool: DatabaseReader {
     /// - important: The `completion` argument is executed in a serial
     ///   dispatch queue, so make sure you use the transaction asynchronously.
     func asyncWALSnapshotTransaction(
-        _ completion: @escaping @Sendable (Result<WALSnapshotTransaction, Error>) -> Void
+        _ completion: @escaping @Sendable (Result<WALSnapshotTransactionBase<API>, Error>) -> Void
     ) {
         guard let readerPool else {
             completion(.failure(DatabaseError.connectionIsClosed()))
@@ -777,22 +777,22 @@ extension DatabasePool: DatabaseReader {
     }
 }
 
-extension DatabasePool: DatabaseWriter {
+extension DatabasePoolBase: DatabaseWriterBase {
     // MARK: - Writing in Database
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func writeWithoutTransaction<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func writeWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.sync(updates)
     }
     
     public func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         try await writer.execute(updates)
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func barrierWriteWithoutTransaction<T>(_ updates: (Database) throws -> T) throws -> T {
+    public func barrierWriteWithoutTransaction<T>(_ updates: (DatabaseBase<API>) throws -> T) throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
         }
@@ -802,7 +802,7 @@ extension DatabasePool: DatabaseWriter {
     }
     
     public func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -832,7 +832,7 @@ extension DatabasePool: DatabaseWriter {
     }
     
     public func asyncBarrierWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ updates: @escaping @Sendable (Result<DatabaseBase<API>, Error>) -> Void
     ) {
         guard let readerPool else {
             updates(.failure(DatabaseError.connectionIsClosed()))
@@ -873,7 +873,7 @@ extension DatabasePool: DatabaseWriter {
     /// - throws: The error thrown by `updates`, or by the wrapping transaction.
     public func writeInTransaction(
         _ kind: Database.TransactionKind? = nil,
-        _ updates: (Database) throws -> Database.TransactionCompletion)
+        _ updates: (DatabaseBase<API>) throws -> Database.TransactionCompletion)
     throws
     {
         try writer.sync { db in
@@ -883,18 +883,18 @@ extension DatabasePool: DatabaseWriter {
         }
     }
     
-    public func unsafeReentrantWrite<T>(_ updates: (Database) throws -> T) rethrows -> T {
+    public func unsafeReentrantWrite<T>(_ updates: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try writer.reentrantSync(updates)
     }
     
     public func asyncWriteWithoutTransaction(
-        _ updates: @escaping @Sendable (Database) -> Void
+        _ updates: @escaping @Sendable (DatabaseBase<API>) -> Void
     ) {
         writer.async(updates)
     }
 }
 
-extension DatabasePool {
+extension DatabasePoolBase {
     
     // MARK: - Snapshots
     

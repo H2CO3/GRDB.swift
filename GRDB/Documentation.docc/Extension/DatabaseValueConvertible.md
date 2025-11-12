@@ -128,7 +128,7 @@ For example:
 
 ```swift
 extension EvenInteger: StatementColumnConvertible {
-    init?(sqliteStatement: SQLiteStatement, index: CInt) {
+    init?(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) {
         let int64 = sqlite3_column_int64(sqliteStatement, index)
         guard let value = Int(exactly: int64) else {
             return nil // Does not fit Int (probably a 32-bit architecture)

@@ -40,7 +40,7 @@ extension SQLSubquery {
     ///     // We know that "SELECT 1 AS a, 2 AS b" selects two columns,
     ///     // so we can find cte columns in the row:
     ///     row.scopes["cte"] // [a:1, b:2]
-    func columnCount(_ db: Database) throws -> Int {
+    func columnCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         switch impl {
         case let .literal(sqlLiteral):
             // Compile request. We can freely use the statement cache because we

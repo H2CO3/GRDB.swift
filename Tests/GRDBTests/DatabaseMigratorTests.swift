@@ -1112,7 +1112,7 @@ class DatabaseMigratorTests : GRDBTestCase {
     
     func test_schemaSource_is_disabled_during_migrations() throws {
         struct SchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 ["id"]
             }
         }
@@ -1149,7 +1149,7 @@ class DatabaseMigratorTests : GRDBTestCase {
     
     func test_schemaSource_can_be_restored_during_migrations() throws {
         struct SchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 ["id"]
             }
         }

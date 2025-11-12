@@ -165,7 +165,7 @@ extension AppDatabase {
     }
     
     /// Support for `createRandomPlayersIfEmpty()` and `refreshPlayers()`.
-    private func createRandomPlayers(_ db: Database) throws {
+    private func createRandomPlayers(_ db: DatabaseBase<some SQLiteAPI>) throws {
         for _ in 0..<8 {
             _ = try Player.makeRandom().inserted(db) // insert but ignore inserted id
         }

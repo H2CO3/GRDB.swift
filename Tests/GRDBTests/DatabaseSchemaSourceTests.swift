@@ -4,7 +4,7 @@ import GRDB
 class DatabaseSchemaSourceTests: GRDBTestCase {
     func test_schemaSource_can_query_schema() throws {
         struct SchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 let tableName = view.name + "_table"
                 if try db.tableExists(view.name + "_table"),
                    try db.primaryKey(tableName).columns == ["id"],
@@ -46,7 +46,7 @@ class DatabaseSchemaSourceTests: GRDBTestCase {
     
     func test_then_with_columnsForPrimaryKey_inView() throws {
         struct SchemaSource1: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 switch view.name {
                 case "view1": ["code"]
                 case "view2": ["id"]
@@ -56,7 +56,7 @@ class DatabaseSchemaSourceTests: GRDBTestCase {
         }
         
         struct SchemaSource2: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 switch view.name {
                 case "view1": ["identifier"]
                 case "view3": ["uuid"]
@@ -65,7 +65,7 @@ class DatabaseSchemaSourceTests: GRDBTestCase {
             }
         }
         
-        func setupSchema(_ db: Database) throws {
+        func setupSchema(_ db: DatabaseBase<some SQLiteAPI>) throws {
             try db.execute(sql: """
                 CREATE VIEW view1 AS SELECT 'foo' AS code, 'whatever' AS identifier;
                 CREATE VIEW view2 AS SELECT 1 AS id;

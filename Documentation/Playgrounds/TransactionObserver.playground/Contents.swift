@@ -40,12 +40,12 @@ class TableChangeObserver : NSObject, TransactionObserver {
         changedTableNames.insert(event.tableName)
     }
     
-    func databaseDidCommit(_ db: Database) {
+    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
         print("Changed table(s): \(changedTableNames.joined(separator: ", "))")
         changedTableNames = []
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
         changedTableNames = []
     }
 }

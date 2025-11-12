@@ -372,7 +372,7 @@ extension TableRecord {
     /// ```
     ///
     /// - parameter db: A database connection.
-    public static func fetchCount(_ db: Database) throws -> Int {
+    public static func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try all().fetchCount(db)
     }
 }
@@ -411,7 +411,7 @@ extension TableRecord {
     ///     try PartialPlayer.numberOfSelectedColumns(db) // 2
     /// }
     /// ```
-    public static func numberOfSelectedColumns(_ db: Database) throws -> Int {
+    public static func numberOfSelectedColumns(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         // The alias makes it possible to count the columns in `SELECT *`:
         let alias = TableAlias(tableName: databaseTableName)
         let context = SQLGenerationContext(db)
@@ -442,7 +442,7 @@ extension TableRecord {
     /// - returns: The number of deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
-    public static func deleteAll(_ db: Database) throws -> Int {
+    public static func deleteAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try all().deleteAll(db)
     }
 }
@@ -468,7 +468,7 @@ extension TableRecord {
     ///     - db: A database connection.
     ///     - key: A primary key value.
     /// - returns: Whether a record exists for this primary key.
-    public static func exists(_ db: Database, key: some DatabaseValueConvertible) throws -> Bool {
+    public static func exists(_ db: DatabaseBase<some SQLiteAPI>, key: some DatabaseValueConvertible) throws -> Bool {
         try !filter(key: key).isEmpty(db)
     }
 }
@@ -496,7 +496,7 @@ extension TableRecord where Self: Identifiable, ID: DatabaseValueConvertible {
     ///     - db: A database connection.
     ///     - id: A primary key value.
     /// - returns: Whether a record exists for this primary key.
-    public static func exists(_ db: Database, id: ID) throws -> Bool {
+    public static func exists(_ db: DatabaseBase<some SQLiteAPI>, id: ID) throws -> Bool {
         if id.databaseValue.isNull {
             // Don't hit the database
             return false
@@ -533,7 +533,7 @@ extension TableRecord {
     ///     - db: A database connection.
     ///     - key: A key dictionary.
     /// - returns: Whether a record exists for this key.
-    public static func exists(_ db: Database, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
+    public static func exists(_ db: DatabaseBase<some SQLiteAPI>, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
         try !filter(key: key).isEmpty(db)
     }
 }
@@ -565,7 +565,7 @@ extension TableRecord {
     /// - returns: The number of deleted records.
     @discardableResult
     public static func deleteAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         keys: some Collection<some DatabaseValueConvertible>
     ) throws -> Int {
         if keys.isEmpty {
@@ -598,7 +598,7 @@ extension TableRecord {
     ///     - key: A primary key value.
     /// - returns: Whether a record was deleted.
     @discardableResult
-    public static func deleteOne(_ db: Database, key: some DatabaseValueConvertible) throws -> Bool {
+    public static func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, key: some DatabaseValueConvertible) throws -> Bool {
         if key.databaseValue.isNull {
             // Don't hit the database
             return false
@@ -636,7 +636,7 @@ extension TableRecord where Self: Identifiable, ID: DatabaseValueConvertible {
     /// - returns: The number of deleted records.
     @discardableResult
     public static func deleteAll(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         ids: some Collection<ID>
     ) throws -> Int {
         if ids.isEmpty {
@@ -673,7 +673,7 @@ extension TableRecord where Self: Identifiable, ID: DatabaseValueConvertible {
     ///     - id: A primary key value.
     /// - returns: Whether a record was deleted.
     @discardableResult
-    public static func deleteOne(_ db: Database, id: ID) throws -> Bool {
+    public static func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, id: ID) throws -> Bool {
         try deleteAll(db, ids: [id]) > 0
     }
 }
@@ -712,7 +712,7 @@ extension TableRecord {
     ///     - keys: An array of key dictionaries.
     /// - returns: The number of deleted records.
     @discardableResult
-    public static func deleteAll(_ db: Database, keys: [[String: (any DatabaseValueConvertible)?]]) throws -> Int {
+    public static func deleteAll(_ db: DatabaseBase<some SQLiteAPI>, keys: [[String: (any DatabaseValueConvertible)?]]) throws -> Int {
         if keys.isEmpty {
             // Avoid hitting the database
             return 0
@@ -751,7 +751,7 @@ extension TableRecord {
     ///     - key: A key dictionary.
     /// - returns: Whether a record was deleted.
     @discardableResult
-    public static func deleteOne(_ db: Database, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
+    public static func deleteOne(_ db: DatabaseBase<some SQLiteAPI>, key: [String: (any DatabaseValueConvertible)?]) throws -> Bool {
         try deleteAll(db, keys: [key]) > 0
     }
 }
@@ -785,8 +785,8 @@ extension TableRecord {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public static func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> Int {
         try updateAll(db, onConflict: conflictResolution, assignments(databaseComponents))
@@ -817,8 +817,8 @@ extension TableRecord {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public static func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignment: (DatabaseComponents) throws -> ColumnAssignment
     ) throws -> Int {
         try updateAll(db, onConflict: conflictResolution, [assignment(databaseComponents)])
@@ -845,8 +845,8 @@ extension TableRecord {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public static func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> Int
     {
@@ -874,8 +874,8 @@ extension TableRecord {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public static func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: ColumnAssignment...)
     throws -> Int
     {
@@ -944,7 +944,7 @@ extension TableRecord {
     ///
     /// - returns: ``RecordError/recordNotFound(databaseTableName:key:)``, or
     ///   any error that prevented the `RecordError` from being constructed.
-    public static func recordNotFound(_ db: Database, key: some DatabaseValueConvertible) -> any Error {
+    public static func recordNotFound(_ db: DatabaseBase<some SQLiteAPI>, key: some DatabaseValueConvertible) -> any Error {
         do {
             let column = try db.filteringPrimaryKeyColumn(databaseTableName)
             return RecordError.recordNotFound(
@@ -969,7 +969,7 @@ extension TableRecord where Self: EncodableRecord {
     ///
     /// - returns: ``RecordError/recordNotFound(databaseTableName:key:)``, or
     ///   any error that prevented the `RecordError` from being constructed.
-    public func recordNotFound(_ db: Database) -> any Error {
+    public func recordNotFound(_ db: DatabaseBase<some SQLiteAPI>) -> any Error {
         do {
             let databaseTableName = type(of: self).databaseTableName
             let primaryKey = try db.primaryKey(databaseTableName)
@@ -992,7 +992,7 @@ extension TableRecord where Self: Identifiable, ID: DatabaseValueConvertible {
     ///
     /// - returns: ``RecordError/recordNotFound(databaseTableName:key:)``, or
     ///   any error that prevented the `RecordError` from being constructed.
-    public static func recordNotFound(_ db: Database, id: Self.ID) -> any Error {
+    public static func recordNotFound(_ db: DatabaseBase<some SQLiteAPI>, id: Self.ID) -> any Error {
         recordNotFound(db, key: id)
     }
 }

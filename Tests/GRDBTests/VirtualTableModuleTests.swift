@@ -15,7 +15,7 @@ private struct FTS3TokenizeModule : VirtualTableModule {
         return [tokenizer]
     }
     
-    func database(_ db: Database, didCreate tableName: String, using definition: FTS3TokenizeTableDefinition) throws {
+    func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: FTS3TokenizeTableDefinition) throws {
     }
 }
 
@@ -33,7 +33,7 @@ private struct ThrowingFTS3TokenizeModule : VirtualTableModule {
         return [tokenizer]
     }
     
-    func database(_ db: Database, didCreate tableName: String, using definition: FTS3TokenizeTableDefinition) throws {
+    func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: FTS3TokenizeTableDefinition) throws {
         throw DatabaseError(resultCode: ResultCode(rawValue: 123))
     }
 }

@@ -301,12 +301,12 @@ class SelectStatementTests : GRDBTestCase {
                     didChange = true
                 }
                 
-                func databaseDidCommit(_ db: Database) {
+                func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
                     triggered = didChange
                     didChange = false
                 }
                 
-                func databaseDidRollback(_ db: Database) {
+                func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
                     didChange = false
                 }
             }

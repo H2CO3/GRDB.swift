@@ -128,7 +128,7 @@ We have seen in the <doc:SingleRowTables#The-Single-Row-Table> section that by d
 
 ```swift
     // Customize the default PersistableRecord behavior
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         // Insert the default configuration if it does not exist yet.
         if try !exists(db) {
             try AppConfiguration.default.insert(db)
@@ -141,7 +141,7 @@ The standard GRDB method ``FetchableRecord/fetchOne(_:)`` returns an optional wh
 ```swift
     /// Returns the persisted configuration, or the default one if the
     /// database table is empty.
-    static func find(_ db: Database) throws -> AppConfiguration {
+    static func find(_ db: DatabaseBase<some SQLiteAPI>) throws -> AppConfiguration {
         try fetchOne(db) ?? .default
     }
 }
@@ -233,7 +233,7 @@ extension AppConfiguration {
 // Database Access
 extension AppConfiguration: FetchableRecord, PersistableRecord {
     // Customize the default PersistableRecord behavior
-    func willUpdate(_ db: Database, columns: Set<String>) throws {
+    func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         // Insert the default configuration if it does not exist yet.
         if try !exists(db) {
             try AppConfiguration.default.insert(db)
@@ -242,7 +242,7 @@ extension AppConfiguration: FetchableRecord, PersistableRecord {
     
     /// Returns the persisted configuration, or the default one if the
     /// database table is empty.
-    static func find(_ db: Database) throws -> AppConfiguration {
+    static func find(_ db: DatabaseBase<some SQLiteAPI>) throws -> AppConfiguration {
         try fetchOne(db) ?? .default
     }
 }

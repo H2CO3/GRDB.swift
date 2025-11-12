@@ -118,19 +118,19 @@ private struct UserFetchableRecord3 : FetchableRecord {
 // MARK: - StatementColumnConvertible
 
 private struct UserStatementColumnConvertible1 : StatementColumnConvertible {
-    init?(sqliteStatement: SQLiteStatement, index: CInt) { }
+    init?(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) { }
 }
 
 private struct UserStatementColumnConvertible2 : StatementColumnConvertible {
-    init(sqliteStatement: SQLiteStatement, index: CInt) { }
+    init(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) { }
 }
 
 private class UserStatementColumnConvertible3 : StatementColumnConvertible {
-    required init?(sqliteStatement: SQLiteStatement, index: CInt) { }
+    required init?(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) { }
 }
 
 private class UserStatementColumnConvertible4 : StatementColumnConvertible {
-    required init(sqliteStatement: SQLiteStatement, index: CInt) { }
+    required init(sqliteStatement: SQLiteStatementBase<some SQLiteAPI>, index: CInt) { }
 }
 
 // MARK: - TableRecord
@@ -148,8 +148,8 @@ private class UserTableRecord2 : TableRecord {
 private class UserTransactionObserver : TransactionObserver {
     func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool { false }
     func databaseDidChange(with event: DatabaseEvent) { }
-    func databaseDidCommit(_ db: Database) { }
-    func databaseDidRollback(_ db: Database) { }
+    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) { }
+    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { }
 }
 
 // MARK: - VirtualTableModule
@@ -159,7 +159,7 @@ private struct UserVirtualTableModule1 : VirtualTableModule {
     let moduleName = "UserVirtualTableModule1"
     func makeTableDefinition(configuration: VirtualTableConfiguration) -> CustomTableDefinition { preconditionFailure() }
     func moduleArguments(for definition: CustomTableDefinition, in db: Database) throws -> [String] { preconditionFailure() }
-    func database(_ db: Database, didCreate tableName: String, using definition: CustomTableDefinition) throws { }
+    func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: CustomTableDefinition) throws { }
 }
 
 private class UserVirtualTableModule2 : VirtualTableModule {
@@ -167,5 +167,5 @@ private class UserVirtualTableModule2 : VirtualTableModule {
     let moduleName = "UserVirtualTableModule2"
     func makeTableDefinition(configuration: VirtualTableConfiguration) -> CustomTableDefinition { preconditionFailure() }
     func moduleArguments(for definition: CustomTableDefinition, in db: Database) throws -> [String] { preconditionFailure() }
-    func database(_ db: Database, didCreate tableName: String, using definition: CustomTableDefinition) throws { }
+    func database(_ db: DatabaseBase<some SQLiteAPI>, didCreate tableName: String, using definition: CustomTableDefinition) throws { }
 }

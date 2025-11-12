@@ -13,11 +13,11 @@ private class UserRecord : Record {
     override class var databaseSelection: [any SQLSelectable] { super.databaseSelection }
     override func encode(to container: inout PersistenceContainer) throws { try super.encode(to: &container) }
     
-    override func willInsert(_ db: Database) throws {
+    override func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try super.willInsert(db)
     }
     
-    override func aroundInsert(_ db: Database, insert: () throws -> InsertionSuccess) throws {
+    override func aroundInsert(_ db: DatabaseBase<some SQLiteAPI>, insert: () throws -> InsertionSuccess) throws {
         try super.aroundInsert(db, insert: insert)
     }
     
@@ -25,11 +25,11 @@ private class UserRecord : Record {
         super.didInsert(inserted)
     }
     
-    override func willUpdate(_ db: Database, columns: Set<String>) throws {
+    override func willUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>) throws {
         try super.willUpdate(db, columns: columns)
     }
     
-    override func aroundUpdate(_ db: Database, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
+    override func aroundUpdate(_ db: DatabaseBase<some SQLiteAPI>, columns: Set<String>, update: () throws -> PersistenceSuccess) throws {
         try super.aroundUpdate(db, columns: columns, update: update)
     }
     
@@ -37,11 +37,11 @@ private class UserRecord : Record {
         super.didUpdate(updated)
     }
     
-    override func willSave(_ db: Database) throws {
+    override func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try super.willSave(db)
     }
     
-    override func aroundSave(_ db: Database, save: () throws -> PersistenceSuccess) throws {
+    override func aroundSave(_ db: DatabaseBase<some SQLiteAPI>, save: () throws -> PersistenceSuccess) throws {
         try super.aroundSave(db, save: save)
     }
     
@@ -49,11 +49,11 @@ private class UserRecord : Record {
         super.didSave(saved)
     }
 
-    override func willDelete(_ db: Database) throws {
+    override func willDelete(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try super.willDelete(db)
     }
     
-    override func aroundDelete(_ db: Database, delete: () throws -> Bool) throws {
+    override func aroundDelete(_ db: DatabaseBase<some SQLiteAPI>, delete: () throws -> Bool) throws {
         try super.aroundDelete(db, delete: delete)
     }
     

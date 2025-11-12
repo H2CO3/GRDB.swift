@@ -163,7 +163,7 @@ public struct DatabaseRegion: Sendable {
     }
     
     /// Returns a region suitable for database observation
-    func observableRegion(_ db: Database) throws -> DatabaseRegion {
+    func observableRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion {
         // SQLite does not expose schema changes to the
         // TransactionObserver protocol. By removing internal SQLite tables from
         // the observed region, we optimize database observation.
@@ -178,7 +178,7 @@ public struct DatabaseRegion: Sendable {
     /// Returns a region only made of actual tables with their canonical names.
     ///
     /// This method removes views.
-    func canonicalTables(_ db: Database) throws -> DatabaseRegion {
+    func canonicalTables(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion {
         guard let tableRegions else { return .fullDatabase }
         var region = DatabaseRegion()
         for (table, tableRegion) in tableRegions {
@@ -237,7 +237,7 @@ extension DatabaseRegion {
     /// Returns an array of all event kinds that can impact this region.
     ///
     /// - precondition: the region is canonical.
-    func impactfulEventKinds(_ db: Database) throws -> [DatabaseEventKind] {
+    func impactfulEventKinds(_ db: DatabaseBase<some SQLiteAPI>) throws -> [DatabaseEventKind] {
         if let tableRegions {
             return try tableRegions.flatMap { (table, tableRegion) -> [DatabaseEventKind] in
                 let tableName = table.rawValue // canonical table name
@@ -420,7 +420,7 @@ public protocol DatabaseRegionConvertible: Sendable {
     /// Returns a database region.
     ///
     /// - parameter db: A database connection.
-    func databaseRegion(_ db: Database) throws -> DatabaseRegion
+    func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion
 }
 
 extension DatabaseRegionConvertible where Self == DatabaseRegion {
@@ -430,16 +430,16 @@ extension DatabaseRegionConvertible where Self == DatabaseRegion {
 }
 
 extension DatabaseRegion: DatabaseRegionConvertible {
-    public func databaseRegion(_ db: Database) throws -> DatabaseRegion {
+    public func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion {
         self
     }
 }
 
 /// A type-erased DatabaseRegionConvertible
 public struct AnyDatabaseRegionConvertible: DatabaseRegionConvertible {
-    let _region: @Sendable (Database) throws -> DatabaseRegion
+    let _region: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion
     
-    public init(_ region: @escaping @Sendable (Database) throws -> DatabaseRegion) {
+    public init(_ region: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion) {
         _region = region
     }
     
@@ -447,7 +447,7 @@ public struct AnyDatabaseRegionConvertible: DatabaseRegionConvertible {
         _region = { try region.databaseRegion($0) }
     }
     
-    public func databaseRegion(_ db: Database) throws -> DatabaseRegion {
+    public func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion {
         try _region(db)
     }
 }
@@ -461,7 +461,7 @@ extension DatabaseRegion {
         }
     }
     
-    static func union(_ regions: [any DatabaseRegionConvertible]) -> @Sendable (Database) throws -> DatabaseRegion {
+    static func union<API: SQLiteAPI>(_ regions: [any DatabaseRegionConvertible]) -> @Sendable (DatabaseBase<API>) throws -> DatabaseRegion {
         return { db in
             try regions.reduce(into: DatabaseRegion()) { union, region in
                 try union.formUnion(region.databaseRegion(db))

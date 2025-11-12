@@ -5,6 +5,8 @@ import Dispatch
 import Foundation
 
 public struct ValueObservation<Reducer: ValueReducer>: Sendable {
+    public typealias API = Reducer.API
+    
     var events = ValueObservationEvents()
     
     /// A boolean value indicating whether the observation requires write access
@@ -120,7 +122,7 @@ extension ValueObservation: Refinable {
     ///   fresh value.
     /// - returns: A DatabaseCancellable that can stop the observation.
     @preconcurrency public func start(
-        in reader: any DatabaseReader,
+        in reader: some DatabaseReaderBase<API>,
         scheduling scheduler: some ValueObservationScheduler,
         onError: @escaping @Sendable (Error) -> Void,
         onChange: @escaping @Sendable (Reducer.Value) -> Void)
@@ -180,7 +182,7 @@ extension ValueObservation: Refinable {
     ///   fresh value.
     /// - returns: A DatabaseCancellable that can stop the observation.
     @preconcurrency @MainActor public func start(
-        in reader: any DatabaseReader,
+        in reader: some DatabaseReaderBase<API>,
         scheduling scheduler: some ValueObservationMainActorScheduler = .mainActor,
         onError: @escaping @MainActor (Error) -> Void,
         onChange: @escaping @MainActor (Reducer.Value) -> Void)
@@ -313,7 +315,7 @@ extension ValueObservation: Refinable {
     // MARK: - Fetching Values
     
     /// Fetches the initial value.
-    func fetchInitialValue(_ db: Database) throws -> Reducer.Value
+    func fetchInitialValue(_ db: DatabaseBase<API>) throws -> Reducer.Value
     where Reducer: ValueReducer
     {
         var reducer = makeReducer()
@@ -348,7 +350,7 @@ extension ValueObservation {
     /// - parameter bufferingPolicy: see the documntation
     ///   of `AsyncThrowingStream`.
     public func values(
-        in reader: any DatabaseReader,
+        in reader: some DatabaseReaderBase<API>,
         scheduling scheduler: some ValueObservationScheduler = .task,
         bufferingPolicy: AsyncValueObservation<Reducer.Value>.BufferingPolicy = .unbounded)
     -> AsyncValueObservation<Reducer.Value>
@@ -483,7 +485,7 @@ extension ValueObservation {
     ///   values are dispatched asynchronously on the main dispatch queue.
     /// - returns: A Combine publisher
     public func publisher(
-        in reader: any DatabaseReader,
+        in reader: some DatabaseReaderBase<API>,
         scheduling scheduler: some ValueObservationScheduler = .async(onQueue: .main))
     -> DatabasePublishers.Value<Reducer.Value>
     where Reducer: ValueReducer
@@ -646,6 +648,7 @@ extension ValueObservation {
     
     // MARK: - Creating ValueObservation
     
+#warning("TODO: expose a version with default api")
     /// Creates an optimized `ValueObservation` that notifies the fetched value
     /// whenever it changes.
     ///
@@ -783,16 +786,18 @@ extension ValueObservation {
     ///     ```
     ///
     /// - parameter fetch: The closure that fetches the observed value.
-    @preconcurrency public static func trackingConstantRegion<Value>(
-        _ fetch: @escaping @Sendable (Database) throws -> Value)
+    @preconcurrency public static func trackingConstantRegion<API, Value>(
+        api: API.Type,
+        _ fetch: @escaping @Sendable (DatabaseBase<API>) throws -> Value)
     -> Self
-    where Reducer == ValueReducers.Fetch<Value>
+    where Reducer == ValueReducers.Fetch<API, Value>
     {
         .init(
             trackingMode: .constantRegionRecordedFromSelection,
             makeReducer: { ValueReducers.Fetch(fetch: fetch) })
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a `ValueObservation` that notifies the fetched value whenever
     /// the provided regions are modified.
     ///
@@ -855,16 +860,18 @@ extension ValueObservation {
     /// - parameter otherRegions: A list of supplementary regions
     ///   to observe.
     /// - parameter fetch: The closure that fetches the observed value.
-    @preconcurrency public static func tracking<Value>(
+    @preconcurrency public static func tracking<API, Value>(
         region: any DatabaseRegionConvertible,
         _ otherRegions: any DatabaseRegionConvertible...,
-        fetch: @escaping @Sendable (Database) throws -> Value)
+        api: API.Type,
+        fetch: @escaping @Sendable (DatabaseBase<API>) throws -> Value)
     -> Self
-    where Reducer == ValueReducers.Fetch<Value>
+    where Reducer == ValueReducers.Fetch<API, Value>
     {
-        tracking(regions: [region] + otherRegions, fetch: fetch)
+        tracking(regions: [region] + otherRegions, api: api, fetch: fetch)
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a `ValueObservation` that notifies the fetched value whenever
     /// the provided regions are modified.
     ///
@@ -925,17 +932,19 @@ extension ValueObservation {
     ///
     /// - parameter regions: An array of observed regions.
     /// - parameter fetch: The closure that fetches the observed value.
-    @preconcurrency public static func tracking<Value>(
+    @preconcurrency public static func tracking<API, Value>(
         regions: [any DatabaseRegionConvertible],
-        fetch: @escaping @Sendable (Database) throws -> Value)
+        api: API.Type,
+        fetch: @escaping @Sendable (DatabaseBase<API>) throws -> Value)
     -> Self
-    where Reducer == ValueReducers.Fetch<Value>
+    where Reducer == ValueReducers.Fetch<API, Value>
     {
         .init(
             trackingMode: .constantRegion(regions),
             makeReducer: { ValueReducers.Fetch(fetch: fetch) })
     }
     
+#warning("TODO: expose a version with default api")
     /// Creates a `ValueObservation` that notifies the fetched values whenever
     /// it changes.
     ///
@@ -983,10 +992,11 @@ extension ValueObservation {
     /// ```
     ///
     /// - parameter fetch: The closure that fetches the observed value.
-    @preconcurrency public static func tracking<Value>(
-        _ fetch: @escaping @Sendable (Database) throws -> Value)
+    @preconcurrency public static func tracking<API, Value>(
+        api: API.Type,
+        _ fetch: @escaping @Sendable (DatabaseBase<API>) throws -> Value)
     -> Self
-    where Reducer == ValueReducers.Fetch<Value>
+    where Reducer == ValueReducers.Fetch<API, Value>
     {
         .init(
             trackingMode: .nonConstantRegionRecordedFromSelection,

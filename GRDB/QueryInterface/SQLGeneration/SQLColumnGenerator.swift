@@ -8,7 +8,7 @@ enum SQLColumnGenerator {
     ///   primary key columns in the table that contains the column. If
     ///   the result is nil, the primary key is the hidden rowID.
     func sql(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         tableName: String,
         primaryKeyColumns: () throws -> [SQLColumnDescriptor]?)
     throws -> String
@@ -27,7 +27,7 @@ enum SQLColumnGenerator {
     }
     
     private func columnSQL(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         column: ColumnDefinition,
         tableName: String,
         primaryKeyColumns: () throws -> [SQLColumnDescriptor]?)

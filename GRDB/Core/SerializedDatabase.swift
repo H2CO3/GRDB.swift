@@ -1,9 +1,9 @@
 import Foundation
 
 /// A class that serializes accesses to an SQLite connection.
-final class SerializedDatabase {
+final class SerializedDatabaseBase<API: SQLiteAPI> {
     /// The database connection
-    private let db: Database
+    private let db: DatabaseBase<API>
     
     /// The actor that performs asynchronous accesses
     private let actor: DispatchQueueActor
@@ -92,7 +92,7 @@ final class SerializedDatabase {
     /// - parameter allowingLongLivedTransaction: When true, the
     ///   ``Configuration/allowsUnsafeTransactions`` configuration flag is
     ///   ignored until this method is called again with false.
-    func sync<T>(allowingLongLivedTransaction: Bool, _ body: (Database) throws -> T) rethrows -> T {
+    func sync<T>(allowingLongLivedTransaction: Bool, _ body: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try sync { db in
             self.allowsUnsafeTransactions = allowingLongLivedTransaction
             return try body(db)
@@ -103,7 +103,7 @@ final class SerializedDatabase {
     /// have finished executing.
     ///
     /// This method is not reentrant.
-    func sync<T>(_ block: (Database) throws -> T) rethrows -> T {
+    func sync<T>(_ block: (DatabaseBase<API>) throws -> T) rethrows -> T {
         // Three different cases:
         //
         // 1. A database is invoked from some queue like the main queue:
@@ -153,7 +153,7 @@ final class SerializedDatabase {
     /// - parameter allowingLongLivedTransaction: When true, the
     ///   ``Configuration/allowsUnsafeTransactions`` configuration flag is
     ///   ignored until this method is called again with false.
-    func reentrantSync<T>(allowingLongLivedTransaction: Bool, _ body: (Database) throws -> T) rethrows -> T {
+    func reentrantSync<T>(allowingLongLivedTransaction: Bool, _ body: (DatabaseBase<API>) throws -> T) rethrows -> T {
         try reentrantSync { db in
             self.allowsUnsafeTransactions = allowingLongLivedTransaction
             return try body(db)
@@ -164,7 +164,7 @@ final class SerializedDatabase {
     /// have finished executing.
     ///
     /// This method is reentrant.
-    func reentrantSync<T>(_ block: (Database) throws -> T) rethrows -> T {
+    func reentrantSync<T>(_ block: (DatabaseBase<API>) throws -> T) rethrows -> T {
         // Three different cases:
         //
         // 1. A database is invoked from some queue like the main queue:
@@ -228,7 +228,7 @@ final class SerializedDatabase {
     }
     
     /// Schedules database operations for execution, and returns immediately.
-    func async(_ block: @escaping @Sendable (Database) -> Void) {
+    func async(_ block: @escaping @Sendable (DatabaseBase<API>) -> Void) {
         queue.async {
             block(self.db)
             self.preconditionNoUnsafeTransactionLeft(self.db)
@@ -243,14 +243,14 @@ final class SerializedDatabase {
     /// Executes the block in the current queue.
     ///
     /// - precondition: the current dispatch queue is valid.
-    func execute<T>(_ block: (Database) throws -> T) rethrows -> T {
+    func execute<T>(_ block: (DatabaseBase<API>) throws -> T) rethrows -> T {
         preconditionValidQueue()
         return try block(db)
     }
     
     /// Asynchrously executes the block.
     func execute<T: Sendable>(
-        _ block: @Sendable (Database) throws -> T
+        _ block: @Sendable (DatabaseBase<API>) throws -> T
     ) async throws -> T {
         let cancelMutex = Mutex<(@Sendable () -> Void)?>(nil)
         return try await withTaskCancellationHandler {
@@ -295,7 +295,7 @@ final class SerializedDatabase {
     
     /// Fatal error if a transaction has been left opened.
     private func preconditionNoUnsafeTransactionLeft(
-        _ db: Database,
+        _ db: DatabaseBase<API>,
         _ message: @autoclosure() -> String = "A transaction has been left opened at the end of a database access",
         file: StaticString = #file,
         line: UInt = #line)

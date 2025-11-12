@@ -8,7 +8,7 @@ private struct Player: Codable, FetchableRecord, PersistableRecord {
     var name: String
     var score: Int?
     
-    static func createTable(_ db: Database) throws {
+    static func createTable(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.create(table: "player") { t in
             t.autoIncrementedPrimaryKey("id")
             t.column("name", .text).notNull()

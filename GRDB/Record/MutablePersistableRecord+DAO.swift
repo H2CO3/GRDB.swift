@@ -1,7 +1,7 @@
 /// DAO takes care of MutablePersistableRecord CRUD
-final class DAO<Record: MutablePersistableRecord> {
+final class DAO<API: SQLiteAPI, Record: MutablePersistableRecord> {
     /// The database
-    let db: Database
+    let db: DatabaseBase<API>
     
     /// DAO keeps a copy the record's persistenceContainer, so that this
     /// dictionary is built once whatever the database operation. It is
@@ -14,7 +14,7 @@ final class DAO<Record: MutablePersistableRecord> {
     /// The table primary key info
     let primaryKey: PrimaryKeyInfo
     
-    init(_ db: Database, _ record: Record) throws {
+    init(_ db: DatabaseBase<API>, _ record: Record) throws {
         self.db = db
         databaseTableName = type(of: record).databaseTableName
         primaryKey = try db.primaryKey(databaseTableName)
@@ -23,10 +23,10 @@ final class DAO<Record: MutablePersistableRecord> {
     }
     
     func insertStatement(
-        _ db: Database,
-        onConflict: Database.ConflictResolution,
+        _ db: DatabaseBase<API>,
+        onConflict: DatabaseConflictResolution,
         returning selection: [any SQLSelectable])
-    throws -> Statement
+    throws -> StatementBase<API>
     {
         let query = InsertQuery(
             onConflict: onConflict,
@@ -40,7 +40,7 @@ final class DAO<Record: MutablePersistableRecord> {
     }
     
     func upsertStatement(
-        _ db: Database,
+        _ db: DatabaseBase<API>,
         onConflict conflictTargetColumns: [String],
         doUpdate assignments: ((_ excluded: TableAlias<Record>) -> [ColumnAssignment])?,
         updateCondition: ((
@@ -48,7 +48,7 @@ final class DAO<Record: MutablePersistableRecord> {
             _ excluded: TableAlias<Record>
         ) -> any SQLExpressible)? = nil,
         returning selection: [any SQLSelectable])
-    throws -> Statement
+    throws -> StatementBase<API>
     {
         // INSERT
         let insertedColumns = persistenceContainer.columns
@@ -138,9 +138,9 @@ final class DAO<Record: MutablePersistableRecord> {
     /// Returns nil if and only if primary key is nil
     func updateStatement(
         columns: Set<String>,
-        onConflict: Database.ConflictResolution,
+        onConflict: DatabaseConflictResolution,
         returning selection: [any SQLSelectable])
-    throws -> Statement?
+    throws -> StatementBase<API>?
     {
         // Fail early if primary key does not resolve to a database row.
         let primaryKeyColumns = primaryKey.columns
@@ -192,7 +192,7 @@ final class DAO<Record: MutablePersistableRecord> {
     }
     
     /// Returns nil if and only if primary key is nil
-    func deleteStatement() throws -> Statement? {
+    func deleteStatement() throws -> StatementBase<API>? {
         // Fail early if primary key does not resolve to a database row.
         let primaryKeyColumns = primaryKey.columns
         let primaryKeyValues = primaryKeyColumns.map {
@@ -211,7 +211,7 @@ final class DAO<Record: MutablePersistableRecord> {
     }
     
     /// Returns nil if and only if primary key is nil
-    func existsStatement() throws -> Statement? {
+    func existsStatement() throws -> StatementBase<API>? {
         // Fail early if primary key does not resolve to a database row.
         let primaryKeyColumns = primaryKey.columns
         let primaryKeyValues = primaryKeyColumns.map {
@@ -244,7 +244,7 @@ final class DAO<Record: MutablePersistableRecord> {
         sql: String,
         checkedArguments arguments: StatementArguments,
         returning selection: [any SQLSelectable])
-    throws -> Statement
+    throws -> StatementBase<API>
     {
         if selection.isEmpty {
             let statement = try db.internalCachedStatement(sql: sql)
@@ -275,7 +275,7 @@ final class DAO<Record: MutablePersistableRecord> {
 // MARK: - InsertQuery
 
 private struct InsertQuery: Hashable {
-    let onConflict: Database.ConflictResolution
+    let onConflict: DatabaseConflictResolution
     let tableName: String
     let insertedColumns: [String]
 }
@@ -314,7 +314,7 @@ extension InsertQuery {
 // MARK: - UpdateQuery
 
 private struct UpdateQuery: Hashable {
-    let onConflict: Database.ConflictResolution
+    let onConflict: DatabaseConflictResolution
     let tableName: String
     let updatedColumns: [String]
     let conditionColumns: [String]

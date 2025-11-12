@@ -251,7 +251,7 @@ class PrimaryKeyInfoTests: GRDBTestCase {
     
     func test_custom_schemaSource_nil_result() throws {
         struct MySchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 nil
             }
         }
@@ -289,7 +289,7 @@ class PrimaryKeyInfoTests: GRDBTestCase {
     
     func test_custom_schemaSource_empty_result() throws {
         struct MySchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 []
             }
         }
@@ -327,7 +327,7 @@ class PrimaryKeyInfoTests: GRDBTestCase {
     
     func test_custom_schemaSource_custom_primary_key() throws {
         struct MySchemaSource: DatabaseSchemaSource {
-            func columnsForPrimaryKey(_ db: Database, inView view: DatabaseObjectID) throws -> [String]? {
+            func columnsForPrimaryKey(_ db: DatabaseBase<some SQLiteAPI>, inView view: DatabaseObjectID) throws -> [String]? {
                 ["playerId"]
             }
         }

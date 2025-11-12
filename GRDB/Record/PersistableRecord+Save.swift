@@ -16,8 +16,8 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public func save(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil)
     throws
     {
         try willSave(db)
@@ -58,8 +58,8 @@ extension PersistableRecord {
     ///   thrown if the database changes fail due to the IGNORE conflict policy.
     @inlinable // allow specialization so that empty callbacks are removed
     public func saveAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         as returnedType: T.Type)
     throws -> T
     {
@@ -104,11 +104,11 @@ extension PersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     /// - precondition: `selection` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
-    public func saveAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+    public func saveAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> T
     {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
@@ -151,8 +151,8 @@ extension PersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func saveAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         as returnedType: T.Type)
     throws -> T
     {
@@ -198,11 +198,11 @@ extension PersistableRecord {
     /// - precondition: `selection` is not empty.
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func saveAndFetch<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+    public func saveAndFetch<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> T
     {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
@@ -234,8 +234,8 @@ extension PersistableRecord {
     /// update callbacks.
     @inlinable // allow specialization so that empty callbacks are removed
     func updateOrInsertWithCallbacks(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution?)
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution?)
     throws -> PersistenceSuccess
     {
         let (saved, _) = try updateOrInsertAndFetchWithCallbacks(
@@ -251,11 +251,11 @@ extension PersistableRecord {
     /// Executes an `UPDATE` or `INSERT` statement, with `RETURNING` clause
     /// if `selection` is not empty, and runs insertion or update callbacks.
     @inlinable // allow specialization so that empty callbacks are removed
-    func updateOrInsertAndFetchWithCallbacks<T>(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution?,
+    func updateOrInsertAndFetchWithCallbacks<API, T>(
+        _ db: DatabaseBase<API>,
+        onConflict conflictResolution: DatabaseConflictResolution?,
         selection: [any SQLSelectable],
-        fetch: (Statement) throws -> T)
+        fetch: (StatementBase<API>) throws -> T)
     throws -> (PersistenceSuccess, T)
     {
         // Attempt at updating if the record has a primary key

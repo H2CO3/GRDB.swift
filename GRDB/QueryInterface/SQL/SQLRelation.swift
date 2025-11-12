@@ -187,7 +187,7 @@ extension SQLRelation {
     /// Convenience factory methods which selects all rows from a table.
     static func all(
         fromTable tableName: String,
-        selection: @escaping @Sendable (Database) -> [SQLSelection] = { _ in [.allColumns] })
+        selection: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) -> [SQLSelection] = { _ in [.allColumns] })
     -> Self
     {
         SQLRelation(
@@ -197,7 +197,7 @@ extension SQLRelation {
 }
 
 extension SQLRelation: Refinable {
-    func selectWhenConnected(_ selection: @escaping @Sendable (Database) throws -> [SQLSelection]) -> Self {
+    func selectWhenConnected(_ selection: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> [SQLSelection]) -> Self {
         with {
             $0.selectionPromise = DatabasePromise(selection)
         }
@@ -228,7 +228,7 @@ extension SQLRelation: Refinable {
             }
     }
     
-    func annotatedWhenConnected(with selection: @escaping @Sendable (Database) throws -> [SQLSelection]) -> Self {
+    func annotatedWhenConnected(with selection: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> [SQLSelection]) -> Self {
         with {
             let old = $0.selectionPromise
             $0.selectionPromise = DatabasePromise { db in
@@ -242,7 +242,7 @@ extension SQLRelation: Refinable {
         annotatedWhenConnected(with: { _ in selection })
     }
     
-    func filterWhenConnected(_ predicate: @escaping @Sendable (Database) throws -> SQLExpression) -> Self {
+    func filterWhenConnected(_ predicate: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> SQLExpression) -> Self {
         with {
             if let old = $0.filterPromise {
                 $0.filterPromise = DatabasePromise { db in
@@ -259,7 +259,7 @@ extension SQLRelation: Refinable {
         filterWhenConnected { _ in predicate }
     }
     
-    func orderWhenConnected(_ orderings: @escaping @Sendable (Database) throws -> [SQLOrdering]) -> Self {
+    func orderWhenConnected(_ orderings: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> [SQLOrdering]) -> Self {
         with {
             $0.ordering = SQLRelation.Ordering(orderings: orderings)
         }
@@ -315,13 +315,13 @@ extension SQLRelation: Refinable {
         }
     }
     
-    func groupWhenConnected(_ expressions: @escaping @Sendable (Database) throws -> [SQLExpression]) -> Self {
+    func groupWhenConnected(_ expressions: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> [SQLExpression]) -> Self {
         with {
             $0.groupPromise = DatabasePromise(expressions)
         }
     }
     
-    func havingWhenConnected(_ predicate: @escaping @Sendable (Database) throws -> SQLExpression) -> Self {
+    func havingWhenConnected(_ predicate: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> SQLExpression) -> Self {
         with {
             if let old = $0.havingExpressionPromise {
                 $0.havingExpressionPromise = DatabasePromise { db in
@@ -602,7 +602,7 @@ extension SQLRelation {
 }
 
 extension SQLRelation {
-    func fetchCount(_ db: Database) throws -> Int {
+    func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         guard groupPromise == nil && limit == nil && ctes.isEmpty else {
             // SELECT ... GROUP BY ...
             // SELECT ... LIMIT ...
@@ -651,7 +651,7 @@ extension SQLRelation {
     }
     
     // SELECT COUNT(*) FROM (self)
-    private func fetchTrivialCount(_ db: Database) throws -> Int {
+    private func fetchTrivialCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         let countRequest: SQLRequest<Int> = "SELECT COUNT(*) FROM (\(SQLSubquery.relation(unordered())))"
         return try countRequest.fetchOne(db)!
     }
@@ -716,7 +716,7 @@ extension SQLRelation {
                 }
             }
             
-            func resolve(_ db: Database) throws -> [SQLOrdering] {
+            func resolve(_ db: DatabaseBase<some SQLiteAPI>) throws -> [SQLOrdering] {
                 switch self {
                 case .terms(let terms):
                     return try terms.resolve(db)
@@ -742,7 +742,7 @@ extension SQLRelation {
                 isReversed: false)
         }
         
-        init(orderings: @escaping @Sendable (Database) throws -> [SQLOrdering]) {
+        init(orderings: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> [SQLOrdering]) {
             self.init(
                 elements: [.terms(DatabasePromise(orderings))],
                 isReversed: false)
@@ -766,7 +766,7 @@ extension SQLRelation {
                 isReversed: isReversed)
         }
         
-        func resolve(_ db: Database) throws -> [SQLOrdering] {
+        func resolve(_ db: DatabaseBase<some SQLiteAPI>) throws -> [SQLOrdering] {
             if isReversed {
                 return try elements.flatMap { try $0.reversed.resolve(db) }
             } else {
@@ -832,7 +832,7 @@ enum SQLAssociationCondition: Sendable {
     }
     
     func joinExpression(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         leftAlias: TableAliasBase,
         rightAlias: TableAliasBase)
     throws -> SQLExpression?
@@ -891,7 +891,7 @@ struct SQLForeignKeyCondition: Equatable {
     
     /// Turns the foreign key condition into a `JoinMapping` that can feed an
     /// SQL JOIN clause.
-    func joinMapping(_ db: Database, from originTable: String) throws -> JoinMapping {
+    func joinMapping(_ db: DatabaseBase<some SQLiteAPI>, from originTable: String) throws -> JoinMapping {
         try foreignKeyRequest(from: originTable)
             .fetchForeignKeyMapping(db)
             .joinMapping(originIsLeft: originIsLeft)

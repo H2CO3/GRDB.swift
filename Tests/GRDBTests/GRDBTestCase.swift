@@ -1,14 +1,14 @@
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 import Foundation
 import XCTest
@@ -171,7 +171,7 @@ class GRDBTestCase: XCTestCase {
     
     // Compare SQL strings (ignoring leading and trailing white space and semicolons.
     func assertEqualSQL(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         _ request: some FetchRequest,
         _ sql: String,
         file: StaticString = #file,
@@ -184,7 +184,7 @@ class GRDBTestCase: XCTestCase {
     
     // Compare SQL strings.
     func assertEqualSQL(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         _ expression: some SQLExpressible,
         _ sql: String,
         file: StaticString = #file,
@@ -229,12 +229,12 @@ let testBundle = Bundle(for: GRDBTestCase.self)
 
 extension FetchRequest {
     /// Turn request into a statement
-    func makeStatement(_ db: Database) throws -> Statement {
+    func makeStatement(_ db: DatabaseBase<some SQLiteAPI>) throws -> Statement {
         try makePreparedRequest(db, forSingleResult: false).statement
     }
     
     /// Turn request into SQL and arguments
-    func build(_ db: Database) throws -> (sql: String, arguments: StatementArguments) {
+    func build(_ db: DatabaseBase<some SQLiteAPI>) throws -> (sql: String, arguments: StatementArguments) {
         let statement = try makePreparedRequest(db, forSingleResult: false).statement
         return (sql: statement.sql, arguments: statement.arguments)
     }
@@ -242,11 +242,11 @@ extension FetchRequest {
 
 /// A type-erased ValueReducer.
 struct AnyValueReducer<Fetched, Value>: ValueReducer {
-    private var __fetch: @Sendable (Database) throws -> Fetched
+    private var __fetch: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> Fetched
     private var __value: (Fetched) -> Value?
     
     init(
-        fetch: @escaping @Sendable (Database) throws -> Fetched,
+        fetch: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> Fetched,
         value: @escaping (Fetched) -> Value?)
     {
         self.__fetch = fetch
@@ -264,13 +264,13 @@ struct AnyValueReducer<Fetched, Value>: ValueReducer {
 
 /// A type-erased _ValueReducerFetcher.
 struct AnyValueReducerFetcher<Fetched>: _ValueReducerFetcher {
-    private var _fetch: @Sendable (Database) throws -> Fetched
+    private var _fetch: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> Fetched
     
-    init(fetch: @escaping @Sendable (Database) throws -> Fetched) {
+    init(fetch: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> Fetched) {
         self._fetch = fetch
     }
     
-    func fetch(_ db: Database) throws -> Fetched {
+    func fetch(_ db: DatabaseBase<some SQLiteAPI>) throws -> Fetched {
         try _fetch(db)
     }
 }

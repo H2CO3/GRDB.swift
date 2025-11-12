@@ -106,14 +106,14 @@ extension QueryInterfaceRequest: FetchRequest {
         .relation(relation)
     }
     
-    public func fetchCount(_ db: Database) throws -> Int {
+    public func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try relation.fetchCount(db)
     }
     
-    public func makePreparedRequest(
-        _ db: Database,
+    public func makePreparedRequest<API>(
+        _ db: DatabaseBase<API>,
         forSingleResult singleResult: Bool = false)
-    throws -> PreparedRequest
+    throws -> PreparedRequestBase<API>
     {
         let generator = SQLQueryGenerator(relation: relation, forSingleResult: singleResult)
         var preparedRequest = try generator.makePreparedRequest(db)
@@ -136,8 +136,10 @@ extension QueryInterfaceRequest: FetchRequest {
 // MARK: - Request Derivation
 
 extension QueryInterfaceRequest: SelectionRequest {
-    public func selectWhenConnected(
-        _ selection: @escaping @Sendable (Database) throws -> [any SQLSelectable])
+#warning("TODO: expose a version with default api")
+    public func selectWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ selection: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLSelectable])
     -> Self
     {
         with {
@@ -373,8 +375,10 @@ extension QueryInterfaceRequest: SelectionRequest {
         }.asRequest(of: RowDecoder.ID.self)
     }
     
-    public func annotatedWhenConnected(
-        with selection: @escaping @Sendable (Database) throws -> [any SQLSelectable])
+#warning("TODO: expose a version with default api")
+    public func annotatedWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        with selection: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLSelectable])
     -> Self
     {
         with {
@@ -386,8 +390,10 @@ extension QueryInterfaceRequest: SelectionRequest {
 }
 
 extension QueryInterfaceRequest: FilteredRequest {
-    public func filterWhenConnected(
-        _ predicate: @escaping @Sendable (Database) throws -> any SQLExpressible)
+#warning("TODO: expose a version with default api")
+    public func filterWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ predicate: @escaping @Sendable (DatabaseBase<API>) throws -> any SQLExpressible)
     -> Self
     {
         with {
@@ -399,8 +405,10 @@ extension QueryInterfaceRequest: FilteredRequest {
 }
 
 extension QueryInterfaceRequest: OrderedRequest {
-    public func orderWhenConnected(
-        _ orderings: @escaping @Sendable (Database) throws -> [any SQLOrderingTerm])
+#warning("TODO: expose a version with default api")
+    public func orderWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ orderings: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLOrderingTerm])
     -> Self
     {
         with {
@@ -467,8 +475,10 @@ extension QueryInterfaceRequest: OrderedRequest {
 }
 
 extension QueryInterfaceRequest: AggregatingRequest {
-    public func groupWhenConnected(
-        _ expressions: @escaping @Sendable (Database) throws -> [any SQLExpressible])
+#warning("TODO: expose a version with default api")
+    public func groupWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ expressions: @escaping @Sendable (DatabaseBase<API>) throws -> [any SQLExpressible])
     -> Self
     {
         with {
@@ -478,8 +488,10 @@ extension QueryInterfaceRequest: AggregatingRequest {
         }
     }
     
-    public func havingWhenConnected(
-        _ predicate: @escaping @Sendable (Database) throws -> any SQLExpressible)
+#warning("TODO: expose a version with default api")
+    public func havingWhenConnected<API: SQLiteAPI>(
+        api: API.Type,
+        _ predicate: @escaping @Sendable (DatabaseBase<API>) throws -> any SQLExpressible)
     -> Self
     {
         with {
@@ -619,7 +631,7 @@ extension QueryInterfaceRequest {
     /// ```
     ///
     /// - parameter db: A database connection.
-    public func isEmpty(_ db: Database) throws -> Bool {
+    public func isEmpty(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool {
         try !SQLRequest("SELECT \(exists())").fetchOne(db)!
     }
 }
@@ -633,7 +645,7 @@ extension QueryInterfaceRequest {
     /// - returns: The number of deleted rows
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
-    public func deleteAll(_ db: Database) throws -> Int {
+    public func deleteAll(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         let statement = try SQLQueryGenerator(relation: relation).makeDeleteStatement(db)
         var changesCount = 0
         try db.countChanges(&changesCount, forTable: relation.source.tableName) {
@@ -668,11 +680,10 @@ extension QueryInterfaceRequest {
     /// - returns: A prepared statement.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: `selection` is not empty.
-    public func deleteAndFetchStatement(
-        _ db: Database,
-        selection: [any SQLSelectable])
-    throws -> Statement
-    {
+    public func deleteAndFetchStatement<API>(
+        _ db: DatabaseBase<API>,
+        selection: [any SQLSelectable]
+    ) throws -> StatementBase<API> {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
         return try SQLQueryGenerator(relation: relation).makeDeleteStatement(db, selection: selection)
     }
@@ -706,7 +717,7 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: The result of `select` is not empty.
     public func deleteAndFetchStatement(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         select: (DatabaseComponents) throws -> [any SQLSelectable]
     ) throws -> Statement
     where RowDecoder: TableRecord
@@ -736,7 +747,7 @@ extension QueryInterfaceRequest {
     /// - parameter db: A database connection.
     /// - returns: A ``RecordCursor`` over the deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func deleteAndFetchCursor(_ db: Database)
+    public func deleteAndFetchCursor(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> RecordCursor<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord
     {
@@ -763,7 +774,7 @@ extension QueryInterfaceRequest {
     /// - parameter db: A database connection.
     /// - returns: An array of deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func deleteAndFetchAll(_ db: Database)
+    public func deleteAndFetchAll(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> [RowDecoder]
     where RowDecoder: FetchableRecord & TableRecord
     {
@@ -789,7 +800,7 @@ extension QueryInterfaceRequest {
     /// - parameter db: A database connection.
     /// - returns: A set of deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func deleteAndFetchSet(_ db: Database)
+    public func deleteAndFetchSet(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> Set<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord & Hashable
     {
@@ -815,7 +826,7 @@ extension QueryInterfaceRequest {
     /// - parameter db: A database connection.
     /// - returns: A set of deleted ids.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func deleteAndFetchIds(_ db: Database)
+    public func deleteAndFetchIds(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> Set<RowDecoder.ID>
     where RowDecoder: TableRecord & Identifiable,
     RowDecoder.ID: Hashable & DatabaseValueConvertible & StatementColumnConvertible
@@ -852,11 +863,10 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: `selection` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func deleteAndFetchStatement(
-        _ db: Database,
-        selection: [any SQLSelectable])
-    throws -> Statement
-    {
+    public func deleteAndFetchStatement<API>(
+        _ db: DatabaseBase<API>,
+        selection: [any SQLSelectable]
+    ) throws -> StatementBase<API> {
         GRDBPrecondition(!selection.isEmpty, "Invalid empty selection")
         return try SQLQueryGenerator(relation: relation).makeDeleteStatement(db, selection: selection)
     }
@@ -891,7 +901,7 @@ extension QueryInterfaceRequest {
     /// - precondition: The result of `select` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func deleteAndFetchStatement(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         select: (DatabaseComponents) throws -> [any SQLSelectable]
     ) throws -> Statement
     where RowDecoder: TableRecord
@@ -922,7 +932,7 @@ extension QueryInterfaceRequest {
     /// - returns: A ``RecordCursor`` over the deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func deleteAndFetchCursor(_ db: Database)
+    public func deleteAndFetchCursor(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> RecordCursor<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord
     {
@@ -950,7 +960,7 @@ extension QueryInterfaceRequest {
     /// - returns: An array of deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func deleteAndFetchAll(_ db: Database)
+    public func deleteAndFetchAll(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> [RowDecoder]
     where RowDecoder: FetchableRecord & TableRecord
     {
@@ -977,7 +987,7 @@ extension QueryInterfaceRequest {
     /// - returns: A set of deleted records.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func deleteAndFetchSet(_ db: Database)
+    public func deleteAndFetchSet(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> Set<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord & Hashable
     {
@@ -1004,7 +1014,7 @@ extension QueryInterfaceRequest {
     /// - returns: A set of deleted ids.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public func deleteAndFetchIds(_ db: Database)
+    public func deleteAndFetchIds(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> Set<RowDecoder.ID>
     where RowDecoder: TableRecord & Identifiable,
     RowDecoder.ID: Hashable & DatabaseValueConvertible & StatementColumnConvertible
@@ -1025,7 +1035,7 @@ extension QueryInterfaceRequest {
 
 extension QueryInterfaceRequest {
     /// The conflict resolution to use for batch updates
-    private var defaultConflictResolutionForUpdate: Database.ConflictResolution {
+    private var defaultConflictResolutionForUpdate: DatabaseConflictResolution {
         // In order to look for the default conflict resolution, we perform a
         // runtime check for MutablePersistableRecord, and look for a
         // user-defined default. Such dynamic dispatch is unusual in GRDB, but
@@ -1062,8 +1072,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignment: (DatabaseComponents) throws -> ColumnAssignment
     ) throws -> Int
     where RowDecoder: TableRecord
@@ -1097,8 +1107,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> Int
     where RowDecoder: TableRecord
@@ -1125,8 +1135,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment]) throws -> Int
     {
         let conflictResolution = conflictResolution ?? defaultConflictResolutionForUpdate
@@ -1164,8 +1174,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     @discardableResult
     public func updateAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: ColumnAssignment...)
     throws -> Int
     {
@@ -1214,8 +1224,8 @@ extension QueryInterfaceRequest {
     /// - precondition: The results of `select` and `assignments` results
     ///   are not empty.
     public func updateAndFetchStatement(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment],
         select: (DatabaseComponents) -> [any SQLSelectable]
     ) throws -> Statement
@@ -1255,8 +1265,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: `selection` and `assignments` are not empty.
     public func updateAndFetchStatement(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment],
         selection: [any SQLSelectable])
     throws -> Statement
@@ -1309,8 +1319,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: The result of `assignments` is not empty.
     public func updateAndFetchCursor(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> RecordCursor<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord
@@ -1344,8 +1354,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: `assignments` is not empty.
     public func updateAndFetchCursor(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> RecordCursor<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord
@@ -1388,8 +1398,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: The result of `assignments` is not empty.
     public func updateAndFetchAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> [RowDecoder]
     where RowDecoder: FetchableRecord & TableRecord
@@ -1420,8 +1430,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: `assignments` is not empty.
     public func updateAndFetchAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> [RowDecoder]
     where RowDecoder: FetchableRecord & TableRecord
@@ -1459,8 +1469,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: The result of `assignments` is not empty.
     public func updateAndFetchSet(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> Set<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord & Hashable
@@ -1491,8 +1501,8 @@ extension QueryInterfaceRequest {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
     /// - precondition: `assignments` is not empty.
     public func updateAndFetchSet(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> Set<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord & Hashable
@@ -1538,8 +1548,8 @@ extension QueryInterfaceRequest {
     ///   are not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchStatement(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment],
         select: (DatabaseComponents) throws -> [any SQLSelectable]
     ) throws -> Statement
@@ -1580,8 +1590,8 @@ extension QueryInterfaceRequest {
     /// - precondition: `selection` and `assignments` are not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchStatement(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment],
         selection: [any SQLSelectable])
     throws -> Statement
@@ -1635,8 +1645,8 @@ extension QueryInterfaceRequest {
     /// - precondition: The result of `assignments` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchCursor(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> RecordCursor<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord
@@ -1671,8 +1681,8 @@ extension QueryInterfaceRequest {
     /// - precondition: `assignments` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchCursor(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> RecordCursor<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord
@@ -1716,8 +1726,8 @@ extension QueryInterfaceRequest {
     /// - precondition: The result of `assignments` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> [RowDecoder]
     where RowDecoder: FetchableRecord & TableRecord
@@ -1749,8 +1759,8 @@ extension QueryInterfaceRequest {
     /// - precondition: `assignments` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchAll(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> [RowDecoder]
     where RowDecoder: FetchableRecord & TableRecord
@@ -1789,8 +1799,8 @@ extension QueryInterfaceRequest {
     /// - precondition: The result of `assignments` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchSet(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         assignments: (DatabaseComponents) throws -> [ColumnAssignment]
     ) throws -> Set<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord & Hashable
@@ -1822,8 +1832,8 @@ extension QueryInterfaceRequest {
     /// - precondition: `assignments` is not empty.
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public func updateAndFetchSet(
-        _ db: Database,
-        onConflict conflictResolution: Database.ConflictResolution? = nil,
+        _ db: DatabaseBase<some SQLiteAPI>,
+        onConflict conflictResolution: DatabaseConflictResolution? = nil,
         _ assignments: [ColumnAssignment])
     throws -> Set<RowDecoder>
     where RowDecoder: FetchableRecord & TableRecord & Hashable
@@ -2144,7 +2154,7 @@ extension ColumnExpression {
 /// - parameter willExecuteSupplementaryRequest: A closure executed before a
 ///   supplementary fetch is performed.
 private func prefetch(
-    _ db: Database,
+    _ db: DatabaseBase<some SQLiteAPI>,
     associations: [_SQLAssociation],
     from originRelation: SQLRelation,
     into originRows: [Row],
@@ -2311,7 +2321,7 @@ func makePrefetchRequest(
 // CAUTION: Keep this code in sync with prefetch(_:associations:in:)
 /// Returns the region of prefetched associations
 func prefetchedRegion(
-    _ db: Database,
+    _ db: DatabaseBase<some SQLiteAPI>,
     associations: [_SQLAssociation],
     from originTable: String)
 throws -> DatabaseRegion
@@ -2333,7 +2343,7 @@ throws -> DatabaseRegion
 
 // CAUTION: Keep this code in sync with prefetch(_:associations:in:)
 func prefetchedRegion(
-    _ db: Database,
+    _ db: DatabaseBase<some SQLiteAPI>,
     association: _SQLAssociation,
     pivotMapping: JoinMapping)
 throws -> DatabaseRegion

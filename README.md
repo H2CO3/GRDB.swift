@@ -2431,7 +2431,7 @@ Callbacks can also help implementing record validation:
 struct Link: PersistableRecord {
     var url: URL
     
-    func willSave(_ db: Database) throws {
+    func willSave(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if url.host == nil {
             throw ValidationError("url must be absolute.")
         }
@@ -2483,7 +2483,7 @@ In the `MutablePersistableRecord` protocol, `willInsert` and `didInsert` are mut
 > struct PictureFile: PersistableRecord {
 >     var path: String
 >     
->     func willDelete(_ db: Database) {
+>     func willDelete(_ db: DatabaseBase<some SQLiteAPI>) {
 >         db.afterNextTransaction { _ in
 >             try? deleteFileOnDisk()
 >         }

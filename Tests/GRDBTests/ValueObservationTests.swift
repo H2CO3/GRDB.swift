@@ -23,7 +23,7 @@ class ValueObservationTests: GRDBTestCase {
     // See <https://github.com/groue/GRDB.swift/issues/1541>
     func testValuesFromAnyDatabaseWriter(writer: any DatabaseWriter) {
         func observe<T>(
-            fetch: @escaping @Sendable (Database) throws -> T
+            fetch: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T
         ) throws -> AsyncValueObservation<T> {
             ValueObservation.tracking(fetch).values(in: writer)
         }
@@ -1366,8 +1366,8 @@ class ValueObservationTests: GRDBTestCase {
             }
             func observes(eventsOfKind eventKind: DatabaseEventKind) -> Bool { true }
             func databaseDidChange(with event: DatabaseEvent) { }
-            func databaseDidRollback(_ db: Database) { }
-            func databaseDidCommit(_ db: Database) {
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { }
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
                 task.cancel()
             }
         }

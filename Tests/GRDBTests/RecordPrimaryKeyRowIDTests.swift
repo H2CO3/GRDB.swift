@@ -16,7 +16,7 @@ private class Person : Record, Hashable {
         super.init()
     }
     
-    static func setup(_ db: Database) throws {
+    static func setup(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try db.execute(sql: """
             CREATE TABLE persons (
                 id INTEGER PRIMARY KEY,
@@ -47,7 +47,7 @@ private class Person : Record, Hashable {
         container["creationDate"] = creationDate
     }
     
-    override func willInsert(_ db: Database) throws {
+    override func willInsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         if creationDate == nil {
             creationDate = Date()
         }

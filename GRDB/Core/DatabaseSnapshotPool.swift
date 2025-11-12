@@ -1,15 +1,15 @@
 #if SQLITE_ENABLE_SNAPSHOT && !SQLITE_DISABLE_SNAPSHOT
-// Import C SQLite functions
-#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
-import SQLCipher
-#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
-import SQLite3
-#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
-// #elseif SomeTrait
-// import ...
-#else // Default SPM trait must be the default. It impossible to detect from Xcode.
-import GRDBSQLite
-#endif
+//// Import C SQLite functions
+//#if GRDBCIPHER // CocoaPods (SQLCipher subspec)
+//import SQLCipher
+//#elseif GRDBFRAMEWORK // GRDB.xcodeproj or CocoaPods (standard subspec)
+//import SQLite3
+//#elseif GRDBCUSTOMSQLITE // GRDBCustom Framework
+//// #elseif SomeTrait
+//// import ...
+//#else // Default SPM trait must be the default. It impossible to detect from Xcode.
+//import GRDBSQLite
+//#endif
 
 /// A database connection that allows concurrent accesses to an unchanging
 /// database content, as it existed at the moment the snapshot was created.
@@ -132,7 +132,7 @@ public final class DatabaseSnapshotPool {
     /// - parameter configuration: A configuration. If nil, the configuration of
     ///   `db` is used.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public init(_ db: Database, configuration: Configuration? = nil) throws {
+    public init(_ db: DatabaseBase<some SQLiteAPI>, configuration: Configuration? = nil) throws {
         let path = db.path
         var configuration = Self.configure(configuration ?? db.configuration)
         
@@ -273,7 +273,7 @@ extension DatabaseSnapshotPool: DatabaseSnapshotReader {
     }
     
     @_disfavoredOverload // SR-15150 Async overloading in protocol implementation fails
-    public func read<T>(_ value: (Database) throws -> T) throws -> T {
+    public func read<T>(_ value: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T {
         GRDBPrecondition(currentReader == nil, "Database methods are not reentrant.")
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -297,7 +297,7 @@ extension DatabaseSnapshotPool: DatabaseSnapshotReader {
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
@@ -319,7 +319,7 @@ extension DatabaseSnapshotPool: DatabaseSnapshotReader {
     }
     
     public func asyncRead(
-        _ value: @escaping @Sendable (Result<Database, Error>) -> Void
+        _ value: @escaping @Sendable (Result<DatabaseBase<some SQLiteAPI>, Error>) -> Void
     ) {
         guard let readerPool else {
             value(.failure(DatabaseError.connectionIsClosed()))
@@ -345,12 +345,12 @@ extension DatabaseSnapshotPool: DatabaseSnapshotReader {
     // `DatabaseSnapshotReader`,  because of
     // <https://github.com/apple/swift/issues/74469>.
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> T
     ) async throws -> T {
         try await read(value)
     }
     
-    public func unsafeReentrantRead<T>(_ value: (Database) throws -> T) throws -> T {
+    public func unsafeReentrantRead<T>(_ value: (DatabaseBase<some SQLiteAPI>) throws -> T) throws -> T {
         if let reader = currentReader {
             return try reader.reentrantSync { db in
                 let result = try value(db)
@@ -399,11 +399,11 @@ extension DatabaseSnapshotPool: DatabaseSnapshotReader {
         return readers.first { $0.onValidQueue }
     }
     
-    private func poolCompletion(_ db: Database) -> PoolCompletion {
+    private func poolCompletion(_ db: DatabaseBase<some SQLiteAPI>) -> PoolCompletion {
         snapshotIsLost(db) ? .discard : .reuse
     }
     
-    private func snapshotIsLost(_ db: Database) -> Bool {
+    private func snapshotIsLost(_ db: DatabaseBase<some SQLiteAPI>) -> Bool {
         do {
             let currentSnapshot = try WALSnapshot(db)
             if currentSnapshot.compare(walSnapshot) == 0 {

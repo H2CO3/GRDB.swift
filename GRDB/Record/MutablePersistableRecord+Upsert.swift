@@ -31,7 +31,7 @@ extension MutablePersistableRecord {
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs, or any
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
-    public mutating func upsert(_ db: Database) throws {
+    public mutating func upsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try willSave(db)
         
         var saved: PersistenceSuccess?
@@ -127,7 +127,7 @@ extension MutablePersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public mutating func upsertAndFetch(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
     throws -> Self
@@ -154,7 +154,7 @@ extension MutablePersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     public mutating func upsertAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         as returnedType: T.Type,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
@@ -209,7 +209,7 @@ extension MutablePersistableRecord {
     ///   error thrown by the persistence callbacks defined by the record type.
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
-    public mutating func upsert(_ db: Database) throws {
+    public mutating func upsert(_ db: DatabaseBase<some SQLiteAPI>) throws {
         try willSave(db)
         
         var saved: PersistenceSuccess?
@@ -305,7 +305,7 @@ extension MutablePersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public mutating func upsertAndFetch(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
     throws -> Self
@@ -333,7 +333,7 @@ extension MutablePersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
     @available(iOS 15, macOS 12, tvOS 15, watchOS 8, *) // SQLite 3.35.0+
     public mutating func upsertAndFetch<T: FetchableRecord & TableRecord>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         as returnedType: T.Type,
         onConflict conflictTarget: [String] = [],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])? = nil)
@@ -364,7 +364,7 @@ extension MutablePersistableRecord {
 
 extension MutablePersistableRecord {
     @inlinable // allow specialization so that empty callbacks are removed
-    mutating func upsertWithCallbacks(_ db: Database)
+    mutating func upsertWithCallbacks(_ db: DatabaseBase<some SQLiteAPI>)
     throws -> InsertionSuccess
     {
         let (inserted, _) = try upsertAndFetchWithCallbacks(
@@ -377,7 +377,7 @@ extension MutablePersistableRecord {
     
     @inlinable // allow specialization so that empty callbacks are removed
     mutating func upsertAndFetchWithCallbacks<T>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])?,
         selection: [any SQLSelectable],
@@ -407,7 +407,7 @@ extension MutablePersistableRecord {
     /// insertion callbacks.
     @usableFromInline
     func upsertAndFetchWithoutCallbacks<T>(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         onConflict conflictTarget: [String],
         doUpdate assignments: ((_ excluded: TableAlias<Self>) -> [ColumnAssignment])?,
         selection: [any SQLSelectable],

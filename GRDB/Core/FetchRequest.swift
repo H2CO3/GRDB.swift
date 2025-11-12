@@ -87,20 +87,20 @@ public protocol FetchRequest<RowDecoder>: SQLSubqueryable, DatabaseRegionConvert
     /// - parameter db: A database connection.
     /// - parameter singleResult: A hint that a single result row will be
     ///   consumed.
-    func makePreparedRequest(_ db: Database, forSingleResult singleResult: Bool) throws -> PreparedRequest
+    func makePreparedRequest<API>(_ db: DatabaseBase<API>, forSingleResult singleResult: Bool) throws -> PreparedRequestBase<API>
     
     /// Returns the number of rows fetched by the request.
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    func fetchCount(_ db: Database) throws -> Int
+    func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int
 }
 
 extension FetchRequest {
     /// Returns the database region that the request feeds from.
     ///
     /// - parameter db: A database connection.
-    public func databaseRegion(_ db: Database) throws -> DatabaseRegion {
+    public func databaseRegion(_ db: DatabaseBase<some SQLiteAPI>) throws -> DatabaseRegion {
         try makePreparedRequest(db, forSingleResult: false).statement.databaseRegion
     }
 }
@@ -123,28 +123,28 @@ typealias WillExecuteSupplementaryRequest = (_ request: AnyFetchRequest<Row>, _ 
 /// - parameter rows: The rows that are modified by the supplementary fetch.
 /// - parameter willExecuteSupplementaryRequest: A closure to execute before
 ///   performing supplementary fetches.
-typealias SupplementaryFetch = (
-    _ db: Database,
+typealias SupplementaryFetch<API: SQLiteAPI> = (
+    _ db: DatabaseBase<API>,
     _ rows: [Row],
     _ willExecuteSupplementaryRequest: WillExecuteSupplementaryRequest?)
 throws -> Void
 
 /// A `PreparedRequest` is a request that is ready to be executed.
-public struct PreparedRequest {
+public struct PreparedRequestBase<API: SQLiteAPI> {
     /// A prepared statement with bound parameters.
-    public var statement: Statement
+    public var statement: StatementBase<API>
     
     /// An eventual adapter for rows fetched by the select statement.
     public var adapter: (any RowAdapter)?
     
     /// A closure that performs supplementary fetches.
     /// Support for eager loading of hasMany associations.
-    var supplementaryFetch: SupplementaryFetch?
+    var supplementaryFetch: SupplementaryFetch<API>?
     
     init(
-        statement: Statement,
+        statement: StatementBase<API>,
         adapter: (any RowAdapter)?,
-        supplementaryFetch: SupplementaryFetch? = nil)
+        supplementaryFetch: SupplementaryFetch<API>? = nil)
     {
         self.statement = statement
         self.adapter = adapter
@@ -172,7 +172,7 @@ extension FetchRequest {
     /// - parameter adapter: A closure that accepts a database connection and
     ///   returns a row adapter.
     public func adapted(
-        _ adapter: @escaping @Sendable (Database) throws -> any RowAdapter
+        _ adapter: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> any RowAdapter
     ) -> AdaptedFetchRequest<Self> {
         AdaptedFetchRequest(self, adapter)
     }
@@ -183,11 +183,11 @@ extension FetchRequest {
 /// See ``FetchRequest/adapted(_:)``.
 public struct AdaptedFetchRequest<Base: FetchRequest> {
     let base: Base
-    let adapter: @Sendable (Database) throws -> any RowAdapter
+    let adapter: @Sendable (DatabaseBase<some SQLiteAPI>) throws -> any RowAdapter
     
     /// Creates an adapted request from a base request and a closure that builds
     /// a row adapter from a database connection.
-    init(_ base: Base, _ adapter: @escaping @Sendable (Database) throws -> any RowAdapter) {
+    init(_ base: Base, _ adapter: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> any RowAdapter) {
         self.base = base
         self.adapter = adapter
     }
@@ -202,14 +202,14 @@ extension AdaptedFetchRequest: SQLSubqueryable {
 extension AdaptedFetchRequest: FetchRequest {
     public typealias RowDecoder = Base.RowDecoder
     
-    public func fetchCount(_ db: Database) throws -> Int {
+    public func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try base.fetchCount(db)
     }
     
-    public func makePreparedRequest(
-        _ db: Database,
+    public func makePreparedRequest<API>(
+        _ db: DatabaseBase<API>,
         forSingleResult singleResult: Bool = false)
-    throws -> PreparedRequest
+    throws -> PreparedRequestBase<API>
     {
         var preparedRequest = try base.makePreparedRequest(db, forSingleResult: singleResult)
         
@@ -262,14 +262,14 @@ extension AnyFetchRequest: SQLSubqueryable {
 }
 
 extension AnyFetchRequest: FetchRequest {
-    public func fetchCount(_ db: Database) throws -> Int {
+    public func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try request.fetchCount(db)
     }
     
-    public func makePreparedRequest(
-        _ db: Database,
+    public func makePreparedRequest<API>(
+        _ db: DatabaseBase<API>,
         forSingleResult singleResult: Bool = false)
-    throws -> PreparedRequest
+    throws -> PreparedRequestBase<API>
     {
         try request.makePreparedRequest(db, forSingleResult: singleResult)
     }
@@ -283,11 +283,11 @@ private class FetchRequestEraser: FetchRequest, @unchecked Sendable {
         fatalError("subclass must override")
     }
     
-    func makePreparedRequest(_ db: Database, forSingleResult singleResult: Bool) throws -> PreparedRequest {
+    func makePreparedRequest<API>(_ db: DatabaseBase<API>, forSingleResult singleResult: Bool) throws -> PreparedRequestBase<API> {
         fatalError("subclass must override")
     }
     
-    func fetchCount(_ db: Database) throws -> Int {
+    func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         fatalError("subclass must override")
     }
 }
@@ -303,11 +303,11 @@ private final class ConcreteFetchRequestEraser<Request: FetchRequest>: FetchRequ
         request.sqlSubquery
     }
     
-    override func fetchCount(_ db: Database) throws -> Int {
+    override func fetchCount(_ db: DatabaseBase<some SQLiteAPI>) throws -> Int {
         try request.fetchCount(db)
     }
     
-    override func makePreparedRequest(_ db: Database, forSingleResult singleResult: Bool) throws -> PreparedRequest {
+    override func makePreparedRequest<API>(_ db: DatabaseBase<API>, forSingleResult singleResult: Bool) throws -> PreparedRequestBase<API> {
         try request.makePreparedRequest(db, forSingleResult: singleResult)
     }
 }

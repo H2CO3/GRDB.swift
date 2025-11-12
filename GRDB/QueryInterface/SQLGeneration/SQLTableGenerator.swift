@@ -17,10 +17,10 @@ struct SQLTableGenerator {
     
     struct KeyConstraint {
         var columns: [String]
-        var conflictResolution: Database.ConflictResolution?
+        var conflictResolution: DatabaseConflictResolution?
     }
     
-    func sql(_ db: Database) throws -> String {
+    func sql(_ db: DatabaseBase<some SQLiteAPI>) throws -> String {
         var statements: [String] = []
         
         do {
@@ -156,12 +156,12 @@ struct SQLTableGenerator {
 }
 
 extension SQLTableGenerator {
-    init(_ db: Database, table: TableDefinition) throws {
+    init(_ db: DatabaseBase<some SQLiteAPI>, table: TableDefinition) throws {
         var indexOptions: IndexOptions = []
         if table.options.contains(.ifNotExists) { indexOptions.insert(.ifNotExists) }
         
         func makeKeyConstraint(
-            _ db: Database,
+            _ db: DatabaseBase<some SQLiteAPI>,
             constraint: TableDefinition.KeyConstraint,
             forwardPrimaryKey: SQLPrimaryKeyDescriptor)
         throws -> SQLTableGenerator.KeyConstraint
@@ -258,7 +258,7 @@ extension SQLTableGenerator {
     }
     
     private static func forwardPrimaryKeyColumns(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         primaryKeyConstraint: TableDefinition.KeyConstraint,
         originTable: String)
     throws -> [SQLColumnDescriptor]?
@@ -291,7 +291,7 @@ extension SQLTableGenerator {
     }
     
     private static func makeForeignKeyGenerator(
-        _ db: Database,
+        _ db: DatabaseBase<some SQLiteAPI>,
         foreignKey: ForeignKeyDefinition,
         originTable: String,
         forwardPrimaryKey: SQLPrimaryKeyDescriptor?,
@@ -464,7 +464,7 @@ struct SQLPrimaryKeyDescriptor {
 }
 
 extension SQLPrimaryKeyDescriptor {
-    static func find(_ db: Database, table: String) throws -> Self {
+    static func find(_ db: DatabaseBase<some SQLiteAPI>, table: String) throws -> Self {
         let columnInfos = try db.primaryKey(table).columnInfos
         return SQLPrimaryKeyDescriptor(
             tableName: table,

@@ -4,7 +4,7 @@ import GRDB
 
 class FTS5TokenizerTests: GRDBTestCase {
     
-    private func match(_ db: Database, _ content: String, _ query: String) -> Bool {
+    private func match(_ db: DatabaseBase<some SQLiteAPI>, _ content: String, _ query: String) -> Bool {
         try! db.execute(sql: "INSERT INTO documents VALUES (?)", arguments: [content])
         defer {
             try! db.execute(sql: "DELETE FROM documents")

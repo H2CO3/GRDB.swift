@@ -356,8 +356,8 @@ extension GRDBTestCase {
     func assertValueObservation<Reducer: ValueReducer>(
         _ observation: ValueObservation<Reducer>,
         records expectedValues: [Reducer.Value],
-        setup: (Database) throws -> Void,
-        recordedUpdates: @escaping (Database) throws -> Void,
+        setup: (DatabaseBase<some SQLiteAPI>) throws -> Void,
+        recordedUpdates: @escaping (DatabaseBase<some SQLiteAPI>) throws -> Void,
         file: StaticString = #file,
         line: UInt = #line)
         throws
@@ -568,7 +568,7 @@ extension GRDBTestCase {
     func assertValueObservation<Reducer: ValueReducer, Failure: Error>(
         _ observation: ValueObservation<Reducer>,
         fails testFailure: (Failure, any DatabaseWriter) throws -> Void,
-        setup: (Database) throws -> Void,
+        setup: (DatabaseBase<some SQLiteAPI>) throws -> Void,
         file: StaticString = #file,
         line: UInt = #line)
         throws

@@ -55,7 +55,7 @@ let count = try await writer.read { db in
 }
 
 // Shorthand notation:
-// ⚠️ Converting non-sendable function value to '@Sendable (Database) 
+// ⚠️ Converting non-sendable function value to '@Sendable (DatabaseBase<some SQLiteAPI>) 
 // throws -> Int' may introduce data races.
 let count = try await writer.read(Player.fetchCount)
 ```

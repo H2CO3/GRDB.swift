@@ -68,7 +68,7 @@ private class Observer : TransactionObserver {
         }
     }
     
-    func databaseDidCommit(_ db: Database) {
+    func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) {
         didCommitCount += 1
         lastCommittedEvents = events
         events = []
@@ -79,7 +79,7 @@ private class Observer : TransactionObserver {
         didCommitBlock?(db)
     }
     
-    func databaseDidRollback(_ db: Database) {
+    func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) {
         didRollbackCount += 1
         lastCommittedEvents = []
         events = []
@@ -1728,8 +1728,8 @@ class TransactionObserverTests: GRDBTestCase {
             }
             
             func databaseWillCommit() throws { willCommitCount += 1 }
-            func databaseDidCommit(_ db: Database) { didCommitCount += 1 }
-            func databaseDidRollback(_ db: Database) { didRollbackCount += 1 }
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) { didCommitCount += 1 }
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { didRollbackCount += 1 }
         }
         
         let observer = Observer()
@@ -2479,8 +2479,8 @@ class TransactionObserverTests: GRDBTestCase {
             }
             
             func databaseWillCommit() throws { willCommitCount += 1 }
-            func databaseDidCommit(_ db: Database) { didCommitCount += 1 }
-            func databaseDidRollback(_ db: Database) { didRollbackCount += 1 }
+            func databaseDidCommit(_ db: DatabaseBase<some SQLiteAPI>) { didCommitCount += 1 }
+            func databaseDidRollback(_ db: DatabaseBase<some SQLiteAPI>) { didRollbackCount += 1 }
         }
         
         let dbQueue = try makeDatabaseQueue()

@@ -2,7 +2,7 @@ import Foundation
 
 // MARK: - Dump
 
-extension Database {
+extension DatabaseBase {
     /// Prints the results of all statements in the provided SQL.
     ///
     /// For example:
@@ -183,7 +183,7 @@ extension Database {
 
 // MARK: -
 
-extension Database {
+extension DatabaseBase {
     func _dumpStatements(
         _ statements: some Cursor<Statement>,
         format: some DumpFormat,
@@ -317,8 +317,8 @@ extension Database {
     }
     
     private func ignoresObject(named name: String) throws -> Bool {
-        if Database.isSQLiteInternalTable(name) { return true }
-        if Database.isGRDBInternalTable(name) { return true }
+        if Self.isSQLiteInternalTable(name) { return true }
+        if Self.isGRDBInternalTable(name) { return true }
         if try isShadowTable(name) { return true }
         return false
     }

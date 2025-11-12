@@ -9,7 +9,7 @@ struct SQLTableAlterationGenerator {
     private var name: String
     private var alterations: [TableAlterationKind] = []
     
-    func sql(_ db: Database) throws -> String {
+    func sql(_ db: DatabaseBase<some SQLiteAPI>) throws -> String {
         var statements: [String] = []
         
         for alteration in alterations {

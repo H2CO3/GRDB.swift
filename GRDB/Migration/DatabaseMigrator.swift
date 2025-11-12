@@ -213,7 +213,7 @@ public struct DatabaseMigrator: Sendable {
     public mutating func registerMigration(
         _ identifier: String,
         foreignKeyChecks: ForeignKeyChecks = .deferred,
-        migrate: @escaping @Sendable (Database) throws -> Void)
+        migrate: @escaping @Sendable (DatabaseBase<some SQLiteAPI>) throws -> Void)
     {
         registerMigration(identifier, foreignKeyChecks: foreignKeyChecks, merging: []) { db, ids in
             precondition(ids.isEmpty)
@@ -314,7 +314,7 @@ public struct DatabaseMigrator: Sendable {
         _ identifier: String,
         foreignKeyChecks: ForeignKeyChecks = .deferred,
         merging mergedIdentifiers: Set<String> = [],
-        migrate: @escaping @Sendable (_ db: Database, _ appliedIdentifiers: Set<String>) throws -> Void)
+        migrate: @escaping @Sendable (_ db: DatabaseBase<some SQLiteAPI>, _ appliedIdentifiers: Set<String>) throws -> Void)
     {
         let migrationChecks: Migration.ForeignKeyChecks
         switch foreignKeyChecks {
@@ -382,7 +382,7 @@ public struct DatabaseMigrator: Sendable {
     ///   from succeeding.
     public func asyncMigrate(
         _ writer: any DatabaseWriter,
-        completion: @escaping @Sendable (Result<Database, Error>) -> Void)
+        completion: @escaping @Sendable (Result<DatabaseBase<some SQLiteAPI>, Error>) -> Void)
     {
         writer.asyncBarrierWriteWithoutTransaction { dbResult in
             do {
@@ -424,7 +424,7 @@ public struct DatabaseMigrator: Sendable {
     /// try migrator.migrate(dbQueue)
     /// ```
     ///
-    public func hasSchemaChanges(_ db: Database) throws -> Bool {
+    public func hasSchemaChanges(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool {
         let appliedIdentifiers = try appliedIdentifiers(db)
         let knownIdentifiers = Set(_migrations.map { $0.identifier })
         if !appliedIdentifiers.isSubset(of: knownIdentifiers) {
@@ -500,7 +500,7 @@ public struct DatabaseMigrator: Sendable {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func appliedMigrations(_ db: Database) throws -> [String] {
+    public func appliedMigrations(_ db: DatabaseBase<some SQLiteAPI>) throws -> [String] {
         let appliedIdentifiers = try self.appliedIdentifiers(db)
         return _migrations.map { $0.identifier }.filter { appliedIdentifiers.contains($0) }
     }
@@ -509,7 +509,7 @@ public struct DatabaseMigrator: Sendable {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func appliedIdentifiers(_ db: Database) throws -> Set<String> {
+    public func appliedIdentifiers(_ db: DatabaseBase<some SQLiteAPI>) throws -> Set<String> {
         do {
             return try String.fetchSet(db, sql: "SELECT identifier FROM grdb_migrations")
         } catch {
@@ -529,7 +529,7 @@ public struct DatabaseMigrator: Sendable {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func completedMigrations(_ db: Database) throws -> [String] {
+    public func completedMigrations(_ db: DatabaseBase<some SQLiteAPI>) throws -> [String] {
         let appliedIdentifiers = try appliedMigrations(db)
         let knownIdentifiers = _migrations.map(\.identifier)
         return zip(appliedIdentifiers, knownIdentifiers)
@@ -542,7 +542,7 @@ public struct DatabaseMigrator: Sendable {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func hasCompletedMigrations(_ db: Database) throws -> Bool {
+    public func hasCompletedMigrations(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool {
         try completedMigrations(db).last == _migrations.last?.identifier
     }
     
@@ -554,7 +554,7 @@ public struct DatabaseMigrator: Sendable {
     ///
     /// - parameter db: A database connection.
     /// - throws: A ``DatabaseError`` whenever an SQLite error occurs.
-    public func hasBeenSuperseded(_ db: Database) throws -> Bool {
+    public func hasBeenSuperseded(_ db: DatabaseBase<some SQLiteAPI>) throws -> Bool {
         let appliedIdentifiers = try self.appliedIdentifiers(db)
         let knownIdentifiers = _migrations.map(\.identifier)
         return appliedIdentifiers.contains { !knownIdentifiers.contains($0) }
@@ -611,7 +611,7 @@ public struct DatabaseMigrator: Sendable {
         }
     }
     
-    private func runMigrations(_ db: Database, upTo targetIdentifier: String) throws {
+    private func runMigrations(_ db: DatabaseBase<some SQLiteAPI>, upTo targetIdentifier: String) throws {
         try db.execute(sql: "CREATE TABLE IF NOT EXISTS grdb_migrations (identifier TEXT NOT NULL PRIMARY KEY)")
         
         // Subsequent migration must not be applied
@@ -643,7 +643,7 @@ public struct DatabaseMigrator: Sendable {
         }
     }
     
-    private func migrate(_ db: Database, upTo targetIdentifier: String) throws {
+    private func migrate(_ db: DatabaseBase<some SQLiteAPI>, upTo targetIdentifier: String) throws {
         if eraseDatabaseOnSchemaChange {
             var needsErase = false
             try db.inTransaction(.deferred) {
