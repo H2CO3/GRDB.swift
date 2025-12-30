@@ -640,7 +640,7 @@ extension DatabaseWriter {
     ///   database access, or the error thrown by `updates`, or
     ///   `CancellationError` if the task is cancelled.
     public func write<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T {
         try await writeWithoutTransaction { db in
             var result: T?
