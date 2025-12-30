@@ -814,32 +814,38 @@ extension DatabasePool: DatabaseWriter {
     }
     
     public func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
         }
         
-        // Pool.barrier does not support async calls (yet?).
-        // So we perform cancellation checks just as in
-        // the async version of SerializedDatabase.execute().
-        let cancelMutex = Mutex<(@Sendable () -> Void)?>(nil)
-        return try await withTaskCancellationHandler {
-            try Task.checkCancellation()
-            return try await readerPool.barrier {
+        // Compiler does not see that updates can be sent.
+        return try await withoutActuallyEscaping(updates) { updates in
+            typealias SendableClosure = @Sendable (Database) throws -> T
+            let updates = unsafeBitCast(updates, to: SendableClosure.self)
+            
+            // Pool.barrier does not support async calls (yet?).
+            // So we perform cancellation checks just as in
+            // the async version of SerializedDatabase.execute().
+            let cancelMutex = Mutex<(@Sendable () -> Void)?>(nil)
+            return try await withTaskCancellationHandler {
                 try Task.checkCancellation()
-                return try writer.sync { db in
-                    defer {
-                        cancelMutex.store(nil)
-                        db.uncancel()
-                    }
-                    cancelMutex.store(db.cancel)
+                return try await readerPool.barrier {
                     try Task.checkCancellation()
-                    return try updates(db)
+                    return try writer.sync { db in
+                        defer {
+                            cancelMutex.store(nil)
+                            db.uncancel()
+                        }
+                        cancelMutex.store(db.cancel)
+                        try Task.checkCancellation()
+                        return try updates(db)
+                    }
                 }
+            } onCancel: {
+                cancelMutex.withLock { $0?() }
             }
-        } onCancel: {
-            cancelMutex.withLock { $0?() }
         }
     }
     

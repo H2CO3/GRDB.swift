@@ -213,7 +213,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///   database access, or the error thrown by `updates`, or
     ///   `CancellationError` if the task is cancelled.
     func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T
     
     /// Schedules database operations for execution, and returns immediately.
@@ -947,7 +947,7 @@ extension AnyDatabaseWriter: DatabaseWriter {
     }
     
     public func barrierWriteWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T {
         try await base.barrierWriteWithoutTransaction(updates)
     }
