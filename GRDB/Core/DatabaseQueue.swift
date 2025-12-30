@@ -397,7 +397,7 @@ extension DatabaseQueue: DatabaseWriter {
     }
     
     public func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T {
         try await writer.execute(updates)
     }

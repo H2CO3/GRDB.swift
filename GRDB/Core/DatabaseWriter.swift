@@ -130,7 +130,7 @@ public protocol DatabaseWriter: DatabaseReader {
     ///   database access, or the error thrown by `updates`, or
     ///   `CancellationError` if the task is cancelled.
     func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T
     
     /// Executes database operations, and returns their result after they have
@@ -936,7 +936,7 @@ extension AnyDatabaseWriter: DatabaseWriter {
     }
     
     public func writeWithoutTransaction<T: Sendable>(
-        _ updates: @Sendable (Database) throws -> T
+        _ updates: sending (Database) throws -> T
     ) async throws -> T {
         try await base.writeWithoutTransaction(updates)
     }
