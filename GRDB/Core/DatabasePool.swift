@@ -352,29 +352,35 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
         }
         
-        return try await readerPool.get { reader in
-            try await reader.execute { db in
-               defer {
-                   // Commit or rollback, but make sure we leave the read-only transaction
-                   // (commit may fail with a CancellationError).
-                   do {
-                       try db.commit()
-                   } catch {
-                       try? db.rollback()
-                   }
-                   assert(!db.isInsideTransaction)
-               }
-               // The block isolation comes from the DEFERRED transaction.
-               try db.beginTransaction(.deferred)
-               try db.clearSchemaCacheIfNeeded()
-               return try value(db)
-           }
+        // Compiler does not see that value can be sent.
+        return try await withoutActuallyEscaping(value) { value in
+            typealias SendableClosure = @Sendable (Database) throws -> T
+            let value = unsafeBitCast(value, to: SendableClosure.self)
+            
+            return try await readerPool.get { reader in
+                try await reader.execute { db in
+                    defer {
+                        // Commit or rollback, but make sure we leave the read-only transaction
+                        // (commit may fail with a CancellationError).
+                        do {
+                            try db.commit()
+                        } catch {
+                            try? db.rollback()
+                        }
+                        assert(!db.isInsideTransaction)
+                    }
+                    // The block isolation comes from the DEFERRED transaction.
+                    try db.beginTransaction(.deferred)
+                    try db.clearSchemaCacheIfNeeded()
+                    return try value(db)
+                }
+            }
         }
     }
     

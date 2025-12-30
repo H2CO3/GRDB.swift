@@ -159,7 +159,7 @@ extension DatabaseSnapshot: DatabaseSnapshotReader {
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         try await reader.execute(value)
     }

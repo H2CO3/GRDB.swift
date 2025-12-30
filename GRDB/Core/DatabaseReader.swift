@@ -215,7 +215,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ///   database access, or the error thrown by `value`, or
     ///   `CancellationError` if the task is cancelled.
     func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T
     
     /// Schedules read-only database operations for execution, and
@@ -652,7 +652,7 @@ extension AnyDatabaseReader: DatabaseReader {
     }
     
     public func read<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         try await base.read(value)
     }

@@ -250,22 +250,29 @@ final class SerializedDatabase {
     
     /// Asynchrously executes the block.
     func execute<T: Sendable>(
-        _ block: @Sendable (Database) throws -> T
+        _ block: sending (Database) throws -> T
     ) async throws -> T {
         let cancelMutex = Mutex<(@Sendable () -> Void)?>(nil)
-        return try await withTaskCancellationHandler {
-            try await actor.execute {
-                defer {
-                    cancelMutex.store(nil)
-                    db.uncancel()
-                    preconditionNoUnsafeTransactionLeft(db)
+        
+        // Compiler does not see that block can be sent.
+        return try await withoutActuallyEscaping(block) { block in
+            typealias SendableClosure = @Sendable (Database) throws -> T
+            let block = unsafeBitCast(block, to: SendableClosure.self)
+            
+            return try await withTaskCancellationHandler {
+                try await actor.execute {
+                    defer {
+                        cancelMutex.store(nil)
+                        db.uncancel()
+                        preconditionNoUnsafeTransactionLeft(db)
+                    }
+                    cancelMutex.store(db.cancel)
+                    try Task.checkCancellation()
+                    return try block(db)
                 }
-                cancelMutex.store(db.cancel)
-                try Task.checkCancellation()
-                return try block(db)
+            } onCancel: {
+                cancelMutex.withLock { $0?() }
             }
-        } onCancel: {
-            cancelMutex.withLock { $0?() }
         }
     }
     
