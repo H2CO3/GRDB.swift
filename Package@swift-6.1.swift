@@ -1,4 +1,4 @@
-// swift-tools-version:6.2
+// swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import Foundation
@@ -97,25 +97,8 @@ let package = Package(
                 .enableUpcomingFeature("GlobalActorIsolatedTypesUsability"),
             ]),
         .testTarget(
-            name: "Swift6ApprochableConcurrencyGRDBTests",
-            dependencies: ["GRDB"],
-            swiftSettings: [
-              .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-              .enableUpcomingFeature("InferIsolatedConformances")
-            ]
-        ),
-        .testTarget(
             name: "Swift6DefaultGRDBTests",
             dependencies: ["GRDB"]
-        ),
-        .testTarget(
-            name: "Swift6MainActorIsolationGRDBTests",
-            dependencies: ["GRDB"],
-            swiftSettings: [
-              .defaultIsolation(MainActor.self),
-              .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
-              .enableUpcomingFeature("InferIsolatedConformances")
-            ]
         ),
     ],
     swiftLanguageModes: [.v6]
