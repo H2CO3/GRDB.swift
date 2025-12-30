@@ -438,16 +438,22 @@ extension DatabasePool: DatabaseReader {
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         guard let readerPool else {
             throw DatabaseError.connectionIsClosed()
         }
         
-        return try await readerPool.get { reader in
-            try await reader.execute { db in
-                try db.clearSchemaCacheIfNeeded()
-                return try value(db)
+        // Compiler does not see that value can be sent.
+        return try await withoutActuallyEscaping(value) { value in
+            typealias SendableClosure = @Sendable (Database) throws -> T
+            let value = unsafeBitCast(value, to: SendableClosure.self)
+            
+            return try await readerPool.get { reader in
+                try await reader.execute { db in
+                    try db.clearSchemaCacheIfNeeded()
+                    return try value(db)
+                }
             }
         }
     }

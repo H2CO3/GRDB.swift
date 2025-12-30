@@ -345,7 +345,7 @@ extension DatabaseSnapshotPool: DatabaseSnapshotReader {
     // `DatabaseSnapshotReader`,  because of
     // <https://github.com/apple/swift/issues/74469>.
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         try await read(value)
     }

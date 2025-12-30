@@ -278,7 +278,7 @@ extension DatabaseQueue: DatabaseReader {
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         try await writer.execute(value)
     }

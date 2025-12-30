@@ -319,7 +319,7 @@ public protocol DatabaseReader: AnyObject, Sendable {
     ///   database access, or the error thrown by `value`, or
     ///   `CancellationError` if the task is cancelled.
     func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T
     
     /// Schedules database operations for execution, and returns immediately.
@@ -669,7 +669,7 @@ extension AnyDatabaseReader: DatabaseReader {
     }
     
     public func unsafeRead<T: Sendable>(
-        _ value: @Sendable (Database) throws -> T
+        _ value: sending (Database) throws -> T
     ) async throws -> T {
         try await base.unsafeRead(value)
     }
