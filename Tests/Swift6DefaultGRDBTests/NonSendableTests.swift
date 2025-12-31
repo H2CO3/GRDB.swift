@@ -10,6 +10,15 @@ private class NonSendable {
 }
 
 @Suite struct NonSendableTests {
+    @Test func non_sendable_type_in_synchronous_database_access() throws {
+        let dbQueue = try DatabaseQueue()
+        let input = NonSendable(value: 0)
+        let output = try dbQueue.read { _ in
+            input
+        }
+        #expect(input === output)
+    }
+    
     @Test func non_sendable_type_sent_to_databaseReader_read() async throws {
         let dbQueue = try DatabaseQueue()
         let nonSendable = NonSendable(value: 0)
@@ -45,7 +54,7 @@ private class NonSendable {
         }
         #expect(value == 0)
     }
-
+    
     @Test func non_sendable_type_sent_to_databaseWriter_writeWithoutTransaction() async throws {
         let dbQueue = try DatabaseQueue()
         let nonSendable = NonSendable(value: 0)
