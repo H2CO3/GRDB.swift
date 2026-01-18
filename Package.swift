@@ -37,7 +37,7 @@ if ProcessInfo.processInfo.environment["SPI_BUILDER"] == "1" {
 }
 
 let package = Package(
-    name: "GRDB",
+    name: "QpawnGRDB",
     defaultLocalization: "en", // for tests
     platforms: [
         .iOS(.v18),
@@ -46,19 +46,20 @@ let package = Package(
         .watchOS(.v7),
     ],
     products: [
-        .library(name: "GRDBSQLite", targets: ["GRDBSQLite"]),
-        .library(name: "GRDB", targets: ["GRDB"]),
-        .library(name: "GRDB-dynamic", type: .dynamic, targets: ["GRDB"]),
+        .library(name: "QpawnGRDBSQLite", targets: ["QpawnGRDBSQLite"]),
+        .library(name: "QpawnGRDB", targets: ["QpawnGRDB"]),
+        .library(name: "QpawnGRDB-dynamic", type: .dynamic, targets: ["QpawnGRDB"]),
     ],
     dependencies: dependencies,
     targets: [
         .systemLibrary(
-            name: "GRDBSQLite",
-            providers: [.apt(["libsqlite3-dev"])]),
+            name: "QpawnGRDBSQLite",
+            providers: [.apt(["libsqlite3-dev"])],
+        ),
         .target(
-            name: "GRDB",
+            name: "QpawnGRDB",
             dependencies: [
-                .target(name: "GRDBSQLite"),
+                .target(name: "QpawnGRDBSQLite"),
             ],
             path: "GRDB",
             resources: [.copy("PrivacyInfo.xcprivacy")],
@@ -66,7 +67,7 @@ let package = Package(
             swiftSettings: swiftSettings),
         .testTarget(
             name: "GRDBTests",
-            dependencies: ["GRDB"],
+            dependencies: ["QpawnGRDB"],
             path: "Tests",
             exclude: [
                 "CocoaPods",
